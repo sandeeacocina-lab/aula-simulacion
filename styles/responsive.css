@@ -1,0 +1,231 @@
+/* Keep narrow layouts intrinsic: only data tables scroll horizontally. */
+.aula :is(.aula-main, .aula-brand, .aula-brand strong, .aula-hero > div,
+  .aula-service, .aula-service-content, .aula-panel, .aula-settings-side,
+  .aula-fields > *, .aula-reset-grid > div, .aula-practice-info > div) { min-width: 0; }
+.aula :is(.aula-company h2, .aula-company > span, .aula-panel, .aula-footer) { overflow-wrap: anywhere; }
+.aula-services { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.aula-settings-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+.aula-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.aula-reset-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.aula-practice-info > div > div { min-width: 0; }
+.aula input { min-width: 0; }
+:is(.bank-app, .mail-app, .sepe-app, .social-app, .tax-app) fieldset { min-inline-size: 0; }
+:is(.bank-table-wrap, .sepe-table-wrap, [data-slot=table-container]) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.bank-company, .ss-return > *, .tax-return > *, .sepe-return > * { min-width: 0; overflow-wrap: anywhere; }
+.mobile-field-label { display: none; }
+
+@media screen and (max-width: 760px) {
+  /* 16 px fields avoid automatic zoom in iOS; controls stay easy to tap. */
+  :is(.aula, .bank-app, .mail-app, .sepe-app, .social-app, .tax-app,
+    [data-slot=dialog-content], [data-slot=alert-dialog-content])
+    :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]), textarea, select, [data-slot=select-trigger]),
+  body:has(.tax-app) :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]), textarea, select) {
+    font-size: 16px !important;
+    min-width: 0;
+    max-width: 100%;
+  }
+  :is(.aula, .bank-app, .mail-app, .sepe-app, .social-app, .tax-app,
+    [data-slot=dialog-content], [data-slot=alert-dialog-content])
+    :is([data-slot=button], [data-slot=select-trigger]),
+  body:has(.tax-app) [data-slot=button] {
+    min-height: 44px;
+    height: auto;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+  :is([data-slot=dialog-content], [data-slot=alert-dialog-content]),
+  body:has(.tax-app) :is([data-slot=dialog-content], [data-slot=alert-dialog-content]) {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100vh - 32px) !important;
+    max-height: calc(100dvh - 32px) !important;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    padding: 24px 18px;
+    gap: 16px;
+    scroll-padding-block: 20px;
+  }
+  :is([data-slot=dialog-content], [data-slot=alert-dialog-content]) :is(form, fieldset, label) { min-width: 0; }
+  :is([data-slot=dialog-title], [data-slot=alert-dialog-title]) { padding-right: 28px; overflow-wrap: anywhere; }
+  [data-slot=dialog-content] > [data-slot=dialog-close] { width: 44px; height: 44px; top: 4px; right: 4px; display: grid; place-items: center; }
+  :is([data-slot=dialog-footer], [data-slot=alert-dialog-footer], .aula-dialog-actions) { flex-wrap: wrap; }
+  [data-slot=select-content], [data-slot=dropdown-menu-content] { max-width: calc(100vw - 24px); }
+  :is([data-slot=select-item], [data-slot=dropdown-menu-item]) { white-space: normal; min-height: 44px; overflow-wrap: anywhere; }
+
+  /* Landing and practice settings. */
+  .aula-header { padding: 18px 16px; gap: 12px; flex-wrap: wrap; }
+  .aula-brand { gap: 9px; }
+  .aula-brand > span { width: 38px; height: 43px; }
+  .aula-brand strong { font-size: 19px; }
+  .aula-brand strong > span { font-size: 11px; letter-spacing: 0; }
+  .aula-header nav { margin-left: auto; gap: 0; }
+  .aula-header nav > a:first-child { display: none; }
+  .aula-header nav a:last-child { min-height: 44px; font-size: 13px; padding: 10px; }
+  .aula-main { padding: 0 16px 36px; }
+  .aula-company { padding: 18px 20px; }
+  .aula-company-icon { float: right; margin: 4px 0 0 12px; }
+  .aula-company > p { font-size: 11px; }
+  .aula-section-title { align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+  .aula-services { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .aula-service { grid-column: span 1 !important; }
+  .aula-service:last-child { grid-column: 1 / -1 !important; }
+  .aula-service p { font-size: 14px; }
+  .aula-practice-info { flex-direction: column; align-items: stretch; padding: 20px; }
+  .aula-practice-info > div { align-items: flex-start; }
+  .aula-practice-info > a { justify-content: center; white-space: normal; min-height: 44px; }
+  .aula-practice-info p br { display: none; }
+  .aula-local-note { font-size: 12px; }
+  .aula-footer { flex-direction: column; gap: 14px; margin: 0 16px; font-size: 12px; }
+  .aula-footer > p { text-align: left; }
+  .aula-settings-grid { grid-template-columns: minmax(0, 1fr); }
+  .aula-reset-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .aula-reset-all { flex-direction: column; align-items: flex-start; }
+  .aula-panel { padding: 22px 18px; }
+  .aula-file-preview { padding-top: 24px; }
+
+  /* Bank: a compact menu and forms that fit the available width. */
+  .bank-header { padding: 20px 16px; gap: 16px; flex-wrap: wrap; }
+  .bank-company { flex: 1 1 160px; border: 0; padding: 0; }
+  .bank-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; padding: 0 16px; }
+  .bank-nav button { padding: 12px 0; white-space: normal; font-size: 14px; gap: 8px; text-align: left; }
+  .bank-nav button svg { flex-shrink: 0; }
+  .bank-main { width: calc(100% - 32px); min-width: 0; }
+  .bank-overview, .bank-manual-grid, .bank-manual-review dl { grid-template-columns: minmax(0, 1fr); }
+  .bank-balance { padding: 24px 20px; min-width: 0; }
+  .bank-balance > strong { font-size: clamp(27px, 7.5vw, 37px); overflow-wrap: anywhere; }
+  .bank-balance p { overflow-wrap: anywhere; }
+  .bank-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 0 16px 20px; }
+  .bank-filters input { width: 100%; }
+  .bank-manual-review { padding: 18px; }
+
+  /* Mail folders remain available above the message list. */
+  .mail-header { padding: 16px; gap: 12px; flex-wrap: wrap; }
+  .mail-header h1 { font-size: 25px; }
+  .mail-header > [data-slot=button] { margin-left: auto; }
+  .mail-layout[data-slot=sidebar-wrapper] { display: flex; flex-direction: column; min-width: 0; }
+  .mail-sidebar[data-slot=sidebar] { width: 100%; border-right: 0; border-bottom: 1px solid #d9e3df; }
+  .mail-sidebar [data-slot=sidebar-content] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 16px; }
+  .mail-profile, .mail-side-note { display: none; }
+  .mail-compose { grid-column: 1; grid-row: 1; min-width: 0; }
+  .mail-side-actions { grid-column: 2; grid-row: 1; min-width: 0; margin: 0; }
+  .mail-side-actions [data-slot=button] { width: 100%; justify-content: center; font-size: 14px; }
+  .mail-sidebar [data-slot=sidebar-menu] { grid-column: 1 / -1; grid-row: 2; display: flex; flex-direction: row; overflow-x: auto; gap: 6px; padding: 3px 0 6px; min-width: 0; overscroll-behavior-x: contain; }
+  .mail-sidebar [data-slot=sidebar-menu-item] { flex-shrink: 0; }
+  .mail-folder[data-slot=sidebar-menu-button] { width: auto; height: auto; min-height: 44px; padding: 10px; gap: 7px; font-size: 14px; }
+  .mail-toolbar { flex-wrap: wrap; gap: 12px; padding: 20px 16px; }
+  .mail-toolbar > div { min-width: 0; }
+  .mail-toolbar > .mail-search { flex-basis: 100%; order: 3; min-width: 0; }
+  .mail-toolbar > [data-slot=button] { margin-left: auto; }
+  .mail-panes { grid-template-columns: minmax(0, 1fr); min-height: 380px; }
+  .mail-message { padding: 24px 18px; }
+  .mail-message-actions { padding: 12px; gap: 6px; }
+  .mail-message-actions [data-slot=button] { padding: 9px 10px; }
+  .mail-sender > div { flex-basis: calc(100% - 50px); }
+  .mail-sender time { padding-left: 48px; }
+  .mail-signature { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .mail-signature-details { padding-left: 15px; }
+  .mail-signature-editor > .mail-field { max-width: none; }
+  .mail-footer { flex-wrap: wrap; gap: 8px; padding: 18px 16px; }
+
+  /* Public offices: every step and navigation option stays visible. */
+  .ss-return, .sepe-return, .tax-return { flex-wrap: wrap; gap: 5px 16px; padding: 10px 16px; }
+  .sepe-sede-header { width: calc(100% - 32px); gap: 12px; flex-wrap: wrap; padding: 12px 0; min-height: 96px; }
+  .sepe-sede-header > a { max-width: 100%; min-width: 0; }
+  .sepe-sede-header .sepe-identity { width: min(260px, 100%); height: auto; min-height: 64px; }
+  .sepe-sede-title { font-size: 18px; }
+  .sepe-workspace-frame { display: block; }
+  .sepe-shell { width: calc(100% - 32px); }
+  .sepe-application-menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 20px; }
+  .sepe-application-menu button { min-height: 44px; padding: 13px 12px; gap: 8px; }
+  .sepe-application-menu button:last-child { grid-column: auto; }
+  .sepe-steps, .ss-steps { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding-bottom: 20px; }
+  .sepe-steps li, .sepe-steps li:last-child, .ss-steps li, .ss-steps li:last-child { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; padding: 0; border: 0; gap: 10px; font-size: 14px; }
+  .sepe-file-selector { flex-wrap: wrap; gap: 10px; }
+  .sepe-file-selector > span { flex-basis: 100%; border-right: 1px solid #aaa; }
+  .sepe-file-selector [data-slot=button] { width: 100%; border-radius: 3px; }
+  .ss-heading { align-items: flex-start; flex-wrap: wrap; gap: 14px; }
+  .ss-header { display: block; padding: 24px 16px; min-height: 100px; }
+  .ss-header .ss-brand { justify-content: flex-start; gap: 14px; }
+  .ss-header .ss-brand .ss-ministry { width: 48%; max-width: 260px; }
+  .ss-header .ss-brand .ss-sede-logo { width: 43%; max-width: 230px; }
+  .ss-header .ss-header-tools { display: none; }
+  .ss-home-layout { display: block; margin-top: 22px; }
+  .ss-side { display: none; }
+  .ss-shell { padding: 0 16px; min-width: 0; }
+  .ss-main-nav > div { flex-wrap: wrap; }
+  .ss-heading h1 { font-size: 26px; overflow-wrap: anywhere; }
+  .ss-form-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .ss-form-container { padding: 24px 18px; }
+  .ss-tabs > [data-slot=tabs-list] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ss-tabs [data-slot=tabs-trigger] { padding: 13px 10px; min-width: 0; }
+  .ss-search { flex-wrap: wrap; align-items: stretch; }
+  .ss-search label:first-child { flex-basis: 100%; }
+  .ss-search label { flex: 1 1 140px; min-width: 0; }
+
+  /* Tax office: scroll only the model menu, never the full page. */
+  body:has(.tax-app) .site-header { flex-wrap: wrap; padding: 12px 16px; gap: 12px; }
+  body:has(.tax-app) .brand { min-width: 0; flex-shrink: 1; }
+  body:has(.tax-app) .brand img { max-width: 100%; }
+  body:has(.tax-app) .date { display: none; }
+  body:has(.tax-app) .model-nav { width: 100%; max-width: 100%; min-width: 0; overscroll-behavior-x: contain; }
+  body:has(.tax-app) .model-nav > button { flex: 0 0 auto; min-height: 44px; }
+  body:has(.tax-app) .main-nav > button { min-height: 44px; }
+  body:has(.tax-app) .form-tabs > [data-slot=tabs-list] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body:has(.tax-app) .form-tabs [data-slot=tabs-trigger] { min-height: 44px; font-size: 14px; }
+  body:has(.tax-app) .field-label { position: static; display: block; padding: 0; margin-bottom: 7px; max-width: none; white-space: normal; overflow: visible; }
+  body:has(.tax-app) .toolbar { position: static; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body:has(.tax-app) .toolbar [data-slot=button]:last-child { grid-column: 1 / -1; }
+  body:has(.tax-app) .number-field input { min-height: 44px; }
+  body:has(.tax-app) .vat-row .box-code { font-size: 13px; }
+}
+
+@media screen and (max-width: 600px) {
+  .aula-services, .aula-fields, .aula-reset-grid { grid-template-columns: minmax(0, 1fr); }
+  .aula-service.bank, .aula-service.mail, .aula-service:last-child { flex-direction: column; }
+  .aula-service.bank .aula-service-image, .aula-service.mail .aula-service-image,
+  .aula-service:last-child .aula-service-image { width: 100%; height: 108px; min-height: 108px; flex-direction: row; gap: 18px; }
+  .aula-service-image { height: 108px; }
+  .aula-service h3 { font-size: 21px; }
+  .aula-service-content { padding: 22px; }
+  .aula-section-title > span { display: flex; }
+  .aula-dialog-actions { flex-direction: column-reverse; }
+  .aula-dialog-actions [data-slot=button] { width: 100%; }
+  .bank-filters { grid-template-columns: minmax(0, 1fr); }
+  .bank-page-heading { flex-wrap: wrap; }
+  .ss-main-nav > div { padding: 0 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ss-main-nav a { white-space: normal; font-size: 14px; min-height: 44px; padding: 12px 10px; border-right: 0; }
+  .ss-main-nav a:first-child { grid-column: 1 / -1; }
+  .ss-main-nav a svg { flex-shrink: 0; }
+  body:has(.tax-app) .tax-line, body:has(.tax-app) .model-115 .tax-line,
+  body:has(.tax-app) .triplets > div { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  body:has(.tax-app) .vat-row, body:has(.tax-app) .vat-row.rate { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 16px 0; }
+  body:has(.tax-app) .vat-row.header-row { display: none; }
+  body:has(.tax-app) .vat-row > span:first-child { font-weight: 600; }
+  body:has(.tax-app) .vat-row .number-field { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 5px 8px; }
+  body:has(.tax-app) .vat-row .mobile-field-label { display: block; grid-column: 1 / -1; font-size: 13px; color: #43536a; line-height: 1.4; }
+}
+
+@media screen and (max-width: 380px) {
+  .aula-header { gap: 10px; }
+  .aula-brand > span { display: none; }
+  .aula-brand strong { font-size: 18px; }
+  .aula-brand strong > span { font-size: 10px; }
+  .aula-hero { padding: 24px 18px; }
+  .aula-hero h1 { font-size: 32px; }
+  .bank-totals { grid-template-columns: minmax(0, 1fr); padding: 10px 20px; }
+  .bank-totals > div { padding: 15px 0; }
+  .bank-totals > div + div { border-left: 0; border-top: 1px solid #e4eae1; }
+  .ss-data { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aula-service { transition: none; }
+  .aula-service:hover { transform: none; }
+}

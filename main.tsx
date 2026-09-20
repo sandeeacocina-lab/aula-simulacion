@@ -8,6 +8,8 @@ import './styles/sepe.css';
 import './styles/social.css';
 import './styles/tributaria.css';
 import './styles/aula.css';
+import './styles/brand.css';
+import './styles/responsive.css';
 const Settings=lazy(()=>import('./components/settings'));
 const Bank=lazy(()=>import('./components/bank/bank-workspace'));
 const BankReceipt=lazy(()=>import('./components/bank/receipt'));

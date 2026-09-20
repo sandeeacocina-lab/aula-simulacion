@@ -1,0 +1,82 @@
+/* Sandra Mangas palette. Institutional offices retain their own identity. */
+.aula {
+  --sandra-coral: #e85c6c;
+  --sandra-turquoise: #279dac;
+  --sandra-blue: #4fb0d4;
+  --sandra-green: #7cc04c;
+  --aula-ink: #293b44;
+  --aula-link: #126d79;
+  background: #fff;
+  color: var(--aula-ink);
+}
+.aula-header { border-color: #dce8eb; }
+.aula-brand { color: var(--aula-ink); }
+.aula-brand > span { background: var(--sandra-coral); color: #24333b; flex-shrink: 0; }
+.aula-header nav a { color: var(--aula-link); }
+.aula-header nav a:last-child { border-color: #99c6ce; background: #f0f8fa; }
+.aula-hero {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+  background: var(--sandra-coral);
+  border-radius: 16px;
+  padding: 42px;
+  margin: 28px 0 38px;
+  gap: 32px;
+}
+.aula-hero h1 {
+  color: #fff;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(34px, 3.3vw, 46px);
+  letter-spacing: -1.2px;
+  line-height: 1.14;
+}
+.aula-hero h1 br { display: none; }
+.aula-hero .aula-eyebrow { color: #29343b; font-size: 12px; letter-spacing: .14em; }
+.aula-hero .aula-eyebrow > span { background: #29343b; }
+.aula-hero > div > p:last-child { color: #29343b; line-height: 1.7; }
+.aula-company { background: #fffaf6; border-color: #fff1e7; box-shadow: 0 8px 24px #74303a12; }
+.aula-company:after { border-color: #d9e9de; }
+.aula-company h2 { color: var(--aula-ink); }
+.aula-company-icon, .aula-company > a { color: var(--aula-link); }
+.aula-company > p, .aula-company > span:not(.aula-company-icon) { color: #506368; }
+.aula-company > a { font-size: 14px; min-height: 44px; margin-top: 10px; }
+.aula-section-title { padding-bottom: 16px; border-bottom: 2px solid var(--sandra-turquoise); }
+.aula-section-title h2 { color: var(--aula-link); font-family: Georgia, 'Times New Roman', serif; font-size: 27px; }
+.aula-section-title > span { color: #53636a; }
+.aula-service { border-color: #d6e4e8; border-radius: 12px; }
+.aula-service:hover { border-color: var(--sandra-turquoise); box-shadow: 0 10px 26px #22748714; }
+.aula-service-image { background: #fff; }
+.aula-service.tax .aula-service-image { border-top-color: var(--sandra-coral); }
+.aula-service.social .aula-service-image { border-top-color: var(--sandra-turquoise); }
+.aula-service.sepe .aula-service-image { border-top-color: var(--sandra-green); }
+.aula-service h3 { color: var(--aula-ink); }
+.aula-service-kind { color: #5b6e77; font-size: 11px; }
+.aula-enter { color: var(--aula-link); min-height: 44px; font-size: 14px; }
+.aula-service.bank .aula-service-image { background: var(--sandra-blue); color: #163843; }
+.aula-service.bank .aula-service-image > strong > span { color: #163843; }
+.aula-service.bank .aula-service-image small { color: #163843; font-size: 9px; font-weight: 700; }
+.aula-service.mail .aula-service-image { background: var(--sandra-green); color: #203f29; }
+.aula-service.mail .aula-service-image small { font-size: 9px; font-weight: 700; }
+.aula-practice-info { background: #edf8fa; border-color: #cee6eb; }
+.aula-practice-info > div > svg, .aula-practice-info h2, .aula-practice-info > a { color: var(--aula-link); }
+.aula-practice-info > a { border-color: #99c6ce; font-size: 13px; }
+.aula-local-note, .aula-footer { color: #596b73; }
+.aula-footer { border-top: 3px solid var(--sandra-coral); }
+.aula-settings > h1 { color: var(--aula-link); font-family: Georgia, 'Times New Roman', serif; }
+.aula-settings > .aula-eyebrow { color: #a83246; }
+.aula-panel { border-color: #d6e4e8; }
+.aula-panel h2, .aula-back { color: var(--aula-link); }
+.aula-note { background: #edf8fa; }
+.aula [data-slot=button] { background: var(--aula-link); border-color: var(--aula-link); }
+.aula [data-slot=button][data-variant=outline] { color: var(--aula-link); border-color: #8db8c0; }
+.aula :is(a, button):focus-visible { outline: 3px solid #146e7b; outline-offset: 4px; }
+
+@media screen and (max-width: 1000px) {
+  .aula-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 260px); gap: 25px; padding: 32px; }
+}
+@media screen and (max-width: 760px) {
+  .aula-hero { grid-template-columns: minmax(0, 1fr); padding: 28px 24px; margin: 20px 0 30px; }
+  .aula-hero h1 { font-size: clamp(32px, 7vw, 42px); letter-spacing: -.8px; }
+  .aula-hero > div > p:last-child { font-size: 16px; }
+  .aula-hero > div > p:last-child br { display: none; }
+  .aula-section-title h2 { font-size: 25px; }
+}
