@@ -1,0 +1,1 @@
+var e={company:`Inscripción de empresa`,person:`Afiliación y número de Seguridad Social`,employment:`Alta de trabajador`},t={company:`TA.6`,person:`TA.1`,employment:`TA.2/S`},n=e=>`/servicios/seguridad-social/justificante?`+new URLSearchParams({registro:e}),r=`/servicios/seguridad-social`;export{r as i,e as n,n as r,t};

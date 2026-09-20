@@ -1,0 +1,1 @@
+import{u as e}from"./index-DUF6r_cG.js";var t=()=>`demo`,n=e;export{n,t};

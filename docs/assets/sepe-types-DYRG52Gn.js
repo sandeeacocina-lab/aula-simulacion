@@ -1,0 +1,1 @@
+var e=e=>e?e.split(`-`).reverse().join(`/`):`No consta`;export{e as t};
