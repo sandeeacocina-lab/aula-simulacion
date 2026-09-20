@@ -1,1 +1,0 @@
-import{u as e}from"./index-D131mbA0.js";var t=()=>`demo`,n=e;export{n,t};

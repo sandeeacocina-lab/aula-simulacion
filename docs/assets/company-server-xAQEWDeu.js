@@ -1,0 +1,1 @@
+import{u as e}from"./index-3mp5OiR2.js";var t=()=>`demo`,n=e;export{n,t};
