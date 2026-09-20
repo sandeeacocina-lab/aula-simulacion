@@ -4,7 +4,7 @@ import {clientCompany,companyUrl,companyFetch} from '@/lib/company-client';
 import {useEffect,useState} from 'react';
 import {DeleteRecord} from '@/components/practice/delete-record';
 import {Button} from '@/components/ui/button';
-import {Printer,Download} from 'lucide-react';
+import {Printer} from 'lucide-react';
 import {kindNames,money,dateLabel,type BankBatch,type BankMovement} from '@/lib/bank-types';
 export type ReceiptData={batch:BankBatch;items:BankMovement[];taxFiling?:{id:string;reference:string;model:string}|null;socialFiling?:{id:string;reference:string;ccc:string;periodFrom:string;periodTo:string}|null};
 export function Receipt({data}:{data:ReceiptData}){
@@ -14,5 +14,5 @@ export function Receipt({data}:{data:ReceiptData}){
 export default function ReceiptPage(){
  const [data,setData]=useState<ReceiptData|null>(null),[error,setError]=useState('');
  useEffect(()=>{const id=new URLSearchParams((window.location.hash.split('?')[1]||'')).get('id');if(!id){setError('Falta la referencia del justificante.');return;}void companyFetch('/api/banco?'+new URLSearchParams({batch:id}),{cache:'no-store'}).then(async r=>{const d=await r.json() as ReceiptData&{error?:string};if(!r.ok)throw Error(d.error);setData(d);}).catch(e=>setError(e.message));},[]);
- return <main className="bank-print-page"><nav className="bank-print-controls"><a href={companyUrl("/servicios/banco")}>Volver al banco</a>{data&&<><Button variant="outline" onClick={()=>window.print()}><Printer size={17}/>Imprimir / guardar PDF</Button>{data.batch.kind!=='opening'&&<DeleteRecord scope="bank" id={data.batch.id} title={kindNames[data.batch.kind]} onDeleted={()=>{window.location.href=companyUrl("/servicios/banco");}}/>}{data.batch.hasXml&&<Button asChild variant="outline"><a href={companyUrl('/api/banco?'+new URLSearchParams({batch:data.batch.id,xml:'1'}))}><Download size={17}/>XML presentado</a></Button>}</>}</nav>{error?<p className="bank-error" role="alert">{error}</p>:data?<Receipt data={data}/>:<p role="status">Abriendo justificante…</p>}</main>;
+ return <main className="bank-print-page"><nav className="bank-print-controls"><a href={companyUrl("/servicios/banco")}>Volver al banco</a>{data&&<><Button variant="outline" onClick={()=>window.print()}><Printer size={17}/>Imprimir / guardar PDF</Button>{data.batch.kind!=='opening'&&<DeleteRecord scope="bank" id={data.batch.id} title={kindNames[data.batch.kind]} onDeleted={()=>{window.location.href=companyUrl("/servicios/banco");}}/>}{data.batch.hasXml&&<Button asChild variant="outline"><a href={companyUrl('/api/banco?'+new URLSearchParams({batch:data.batch.id,xml:'1'}))}>XML presentado</a></Button>}</>}</nav>{error?<p className="bank-error" role="alert">{error}</p>:data?<Receipt data={data}/>:<p role="status">Abriendo justificante…</p>}</main>;
 }

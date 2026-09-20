@@ -2,7 +2,7 @@
 import {companyUrl} from '@/lib/company-client';
 
 
-import {Download,ExternalLink,FileText} from 'lucide-react';
+import {FileText} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Dialog,DialogClose,DialogContent,DialogDescription,DialogTitle,DialogTrigger} from '@/components/ui/dialog';
 
@@ -19,14 +19,14 @@ export default function ContractModels(){
     <h3>Modelos oficiales del SEPE</h3>
     <p>Contratos indefinidos, temporales y formativos, anexos y prórrogas.</p>
     <Dialog>
-     <DialogTrigger asChild><Button type="button"><Download size={17} aria-hidden="true"/>Consultar y descargar modelos<ExternalLink size={15} aria-hidden="true"/></Button></DialogTrigger>
+     <DialogTrigger asChild><Button type="button">Consultar y descargar modelos</Button></DialogTrigger>
      <DialogContent className="sepe-help-dialog sepe-external-dialog">
       <DialogTitle>Salida de la aula de simulación</DialogTitle>
       <DialogDescription>Va a abrir la web oficial del SEPE en una nueva pestaña. La aula de simulación permanecerá abierta.</DialogDescription>
       <p className="sepe-external-destination">www.sepe.es · Modelos de contratos</p>
       <div className="sepe-actions">
        <DialogClose asChild><Button type="button" variant="outline">Cancelar</Button></DialogClose>
-       <DialogClose asChild><Button asChild><a href={companyUrl(modelsUrl)} target="_blank" rel="noopener noreferrer">Ir al SEPE<ExternalLink size={16} aria-hidden="true"/></a></Button></DialogClose>
+       <DialogClose asChild><Button asChild><a href={companyUrl(modelsUrl)} target="_blank" rel="noopener noreferrer">Ir al SEPE</a></Button></DialogClose>
       </div>
      </DialogContent>
     </Dialog>

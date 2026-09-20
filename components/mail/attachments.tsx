@@ -2,7 +2,7 @@
 import {companyUrl} from '@/lib/company-client';
 
 import {useId,useState} from 'react';
-import {Paperclip,Download,Eye,X} from 'lucide-react';
+import {Paperclip,Eye,X} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {newMailId} from '@/lib/mail-types';
 import {FILE_ACCEPT,checkFiles,fileSize,type MailAttachment,type PendingAttachment} from '@/lib/mail-files';
@@ -25,6 +25,6 @@ export function MessageAttachments({messageId,files}:{messageId:string;files:Mai
  return <section className="mail-message-attachments" aria-label="Archivos adjuntos"><h3><Paperclip size={18}/>{files.length} {files.length===1?'archivo adjunto':'archivos adjuntos'}</h3><ul className="mail-attachments">{files.map(f=>{
   const url='/api/correo/adjuntos?'+new URLSearchParams({message:messageId,file:f.id});
   const preview=['application/pdf','image/png','image/jpeg','image/webp'].includes(f.type);
-  return <li key={f.id}><Paperclip size={18}/><span><strong>{f.name}</strong><small>{fileSize(f.size)}</small></span><div className="mail-file-actions">{preview&&<a href={companyUrl(url+'&preview=1')} target="_blank" rel="noreferrer" aria-label={'Abrir '+f.name}><Eye size={16}/>Abrir</a>}<a href={companyUrl(url)} download={f.name} aria-label={'Descargar '+f.name}><Download size={16}/>Descargar</a></div></li>;
+  return <li key={f.id}><Paperclip size={18}/><span><strong>{f.name}</strong><small>{fileSize(f.size)}</small></span><div className="mail-file-actions">{preview&&<a href={companyUrl(url+'&preview=1')} target="_blank" rel="noreferrer" aria-label={'Abrir '+f.name}><Eye size={16}/>Abrir</a>}<a href={companyUrl(url)} download={f.name} aria-label={'Descargar '+f.name}>Descargar</a></div></li>;
  })}</ul></section>;
 }

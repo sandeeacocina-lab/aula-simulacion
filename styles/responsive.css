@@ -229,3 +229,11 @@
   .aula-service { transition: none; }
   .aula-service:hover { transform: none; }
 }
+
+/* Text controls without decorative arrows. */
+select { appearance: none !important; -webkit-appearance: none !important; background-image: none !important; }
+summary { list-style: none; }
+summary::marker { content: ''; }
+summary::-webkit-details-marker { display: none; }
+input[type=number] { appearance: textfield; -moz-appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }

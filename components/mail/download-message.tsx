@@ -2,7 +2,7 @@
 import {companyFetch} from '@/lib/company-client';
 
 import {useState} from 'react';
-import {Download,FileText,Loader2,Mail} from 'lucide-react';
+import {FileText,Loader2,Mail} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuTrigger} from '@/components/ui/dropdown-menu';
 
@@ -18,5 +18,5 @@ export function DownloadMessage({id,onError}:{id:string;onError:(message:string)
    const url=URL.createObjectURL(await response.blob()),link=document.createElement('a');link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
   }catch(e){onError(e instanceof Error?e.message:'No se ha podido descargar el correo. Vuelve a intentarlo.');}finally{setDownloading(false);}
  }
- return <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" disabled={downloading}>{downloading?<Loader2 size={17} className="mail-spinning"/>:<Download size={17}/>} {downloading?'Descargando…':'Descargar correo'}</Button></DropdownMenuTrigger><DropdownMenuContent className="mail-download-menu" align="start"><DropdownMenuItem onSelect={()=>void download('pdf')}><FileText size={18}/><span><strong>Documento PDF</strong><small>Mensaje, firma y relación de adjuntos</small></span></DropdownMenuItem><DropdownMenuItem onSelect={()=>void download('eml')}><Mail size={18}/><span><strong>Correo completo (.eml)</strong><small>Incluye los archivos adjuntos</small></span></DropdownMenuItem></DropdownMenuContent></DropdownMenu>;
+ return <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" disabled={downloading}>{downloading?<Loader2 size={17} className="mail-spinning"/>:null} {downloading?'Descargando…':'Descargar correo'}</Button></DropdownMenuTrigger><DropdownMenuContent className="mail-download-menu" align="start"><DropdownMenuItem onSelect={()=>void download('pdf')}><FileText size={18}/><span><strong>Documento PDF</strong><small>Mensaje, firma y relación de adjuntos</small></span></DropdownMenuItem><DropdownMenuItem onSelect={()=>void download('eml')}><Mail size={18}/><span><strong>Correo completo (.eml)</strong><small>Incluye los archivos adjuntos</small></span></DropdownMenuItem></DropdownMenuContent></DropdownMenu>;
 }
