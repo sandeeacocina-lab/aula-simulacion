@@ -1,1 +1,0 @@
-import{tt as e}from"./index-fi2DVASY.js";var t=()=>`demo`,n=e;export{n,t};

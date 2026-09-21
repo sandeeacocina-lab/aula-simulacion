@@ -17,7 +17,8 @@ export function mailPDF(m:MailMessage){
  const encode=(s:string)=>Array.from(s).map(c=>{if(!chars.has(c))chars.set(c,chars.size+1);return chars.get(c)!.toString(16).padStart(4,'0');}).join('');
  const text=(s:string,x:number,top:number,size=10,bold=false,ink=color)=>{stream+=`BT /F${bold?2:1} ${size} Tf ${ink} rg 1 0 0 1 ${x} ${842-top} Tm <${encode(s)}> Tj ET\n`;};
  const rule=(top:number)=>{stream+=`q 0.85 0.80 0.75 RG 0.6 w 44 ${842-top} m 551 ${842-top} l S Q\n`;};
- const header=()=>{if(mailLogo){const scale=Math.min(120/mailLogo.width,45/mailLogo.height),w=mailLogo.width*scale,h=mailLogo.height*scale;stream+=`q ${w} 0 0 ${h} 44 ${842-40-h} cm /Logo Do Q\n`;}else{let name=profile.shortName;while(width(name,12,true)>375)name=name.slice(0,-1);text(name,44,55,12,true,pink);}text('CORREO',455,55,12,true,pink);text(m.homeFolder==='sent'?'Enviado':m.homeFolder==='drafts'?'Borrador':'Recibido',455,73,9,false,muted);rule(89);y=113;};
+ const arreaHeader=mailLogo?.id==='arrea';
+ const header=()=>{if(mailLogo){const scale=Math.min(120/mailLogo.width,(arreaHeader?95:45)/mailLogo.height),w=mailLogo.width*scale,h=mailLogo.height*scale;stream+=`q ${w} 0 0 ${h} 44 ${842-(arreaHeader?24:40)-h} cm /Logo Do Q\n`;}else{let name=profile.shortName;while(width(name,12,true)>375)name=name.slice(0,-1);text(name,44,55,12,true,pink);}text('CORREO',455,55,12,true,pink);text(m.homeFolder==='sent'?'Enviado':m.homeFolder==='drafts'?'Borrador':'Recibido',455,73,9,false,muted);rule(arreaHeader?130:89);y=arreaHeader?154:113;};
  const finish=()=>{rule(776);text('Simulación educativa · '+profile.name,44,793,8,false,muted);text('Página '+(pages.length+1),500,793,8,false,muted);text('Referencia: '+m.id,44,808,7.5,false,muted);pages.push(stream);stream='';};
  const ensure=(height:number)=>{if(y+height>754){finish();header();}};
  const wrap=(s:string,max:number,size:number,bold:boolean)=>{
@@ -35,9 +36,10 @@ export function mailPDF(m:MailMessage){
  y+=12;ensure(35);rule(y);y+=25;paragraph(content.body||'Sin texto',10.5);y+=22;
  if(m.signature){
   const s=m.signature,ink=rgb(s.color),lines=[s.role,s.name?s.organization:'',s.location,...content.extraLines,s.email,s.phone,s.website].filter(Boolean);
-  const height=35+(signatureLogo?55:0)+wrap(s.name||s.organization,507,12,true).length*17+lines.reduce((n,line)=>n+wrap(line,507,9.5,false).length*14.5,0);
+  const signatureHeight=signatureLogo?.id==='arrea'?95:38;
+  const height=35+(signatureLogo?signatureHeight+17:0)+wrap(s.name||s.organization,507,12,true).length*17+lines.reduce((n,line)=>n+wrap(line,507,9.5,false).length*14.5,0);
   ensure(Math.min(height,640));rule(y);y+=24;
-  if(signatureLogo){const scale=Math.min(130/signatureLogo.width,38/signatureLogo.height),w=signatureLogo.width*scale,h=signatureLogo.height*scale;stream+=`q ${w} 0 0 ${h} 44 ${842-y-h} cm /SignatureLogo Do Q\n`;y+=h+17;}
+  if(signatureLogo){const scale=Math.min(130/signatureLogo.width,signatureHeight/signatureLogo.height),w=signatureLogo.width*scale,h=signatureLogo.height*scale;stream+=`q ${w} 0 0 ${h} 44 ${842-y-h} cm /SignatureLogo Do Q\n`;y+=h+17;}
   paragraph(s.name||s.organization,12,true,ink);
   for(const line of lines)paragraph(line,9.5,false,muted);y+=17;
  }else if(m.source==='mail'){

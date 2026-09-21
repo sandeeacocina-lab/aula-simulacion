@@ -7,3 +7,9 @@
 @media(max-width:1000px){.workspace-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.workspace-new{grid-column:1/-1}.workspace-header nav{margin-left:0}}
 @media(max-width:760px){.workspace-welcome{padding:30px 24px;margin:20px 0 28px}.workspace-welcome h1{font-size:clamp(32px,8.4vw,44px);letter-spacing:-.8px}.workspace-welcome>p:last-child{font-size:16px}.workspace-welcome>p:last-child br{display:none}.workspace-grid{gap:16px}.workspace-card-body{padding:22px}.workspace-card h3{font-size:21px}.workspace-header nav{width:100%;gap:8px;display:flex;margin:0}.workspace-header nav a[data-slot=button]{display:inline-flex!important;flex:1;padding:10px 8px}.workspace-header .workspace-brand-logo{height:50px;width:82px}.workspace-educational{font-size:11px}.workspace-office-intro{display:block;padding:28px 0}.workspace-office-intro>[data-slot=button]{margin-top:18px}.workspace-company-data{padding:18px}.workspace-company-data dl{grid-template-columns:1fr}.workspace-company-data>a{margin-left:0}}
 @media(max-width:540px){.workspace-grid{grid-template-columns:1fr}.workspace-card-image{height:146px}.workspace-new{grid-column:auto}.workspace-picker .aula-section-title h2{font-size:24px}.workspace-picker .aula-section-title>span{display:none}.workspace-educational{width:100%;margin-left:47px}.workspace-create .aula-fields{grid-template-columns:1fr}}
+
+/* ARREA edition 3.0: preserve the supplied mark's proportions and clear space. */
+.mail-home img[src*="arrea-logo"],.mail-signature-logo img[src*="arrea-logo"]{width:124px;height:auto;max-height:none;object-fit:contain;flex-shrink:0}
+.workspace-header .workspace-brand-logo[src*="arrea-logo"]{width:124px;height:auto;max-height:none;flex-shrink:0}
+.workspace-card-image:has(img[src*="arrea-logo"]){padding:14px}
+.workspace-card-image img[src*="arrea-logo"]{width:140px;height:auto;max-height:none}
