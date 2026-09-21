@@ -20,12 +20,12 @@ import {reportModels,reportNames,type ReportModel} from '@/lib/tributaria/report
 import {downloadPDF} from '@/lib/tributaria/receipt';
 const simulationId=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,'0')).join('');
 const models:Model[]=['303','111','115'];
-const certs=[{company:clientCompany().name,nif:clientCompany().nif},{company:'OTRA EMPRESA SIMULADA',nif:'SIM000003'}];
 function Choice({label,value,onChange,options}:{label:string;value:string;onChange:(v:string)=>void;options:{value:string;label:string}[]}){return <div className="field"><span className="field-label">{label}</span><Select value={value} onValueChange={onChange}><SelectTrigger aria-label={label}><SelectValue/></SelectTrigger><SelectContent>{options.map(o=><SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent></Select></div>}
 function Section({title,children}:{title:string;children:React.ReactNode}){return <section className="tax-section"><h2><span>{title}</span></h2><div className="section-body">{children}</div></section>}
 function TextInput({label,value,onChange,...rest}:{label:string;value:string;onChange:(v:string)=>void;maxLength?:number;placeholder?:string;readOnly?:boolean}){return <label className="field"><span className="field-label">{label}</span><input value={value} onChange={e=>onChange(e.target.value)} {...rest}/></label>}
 function methodLabel(v:string){return ({domiciliacion:'Domiciliación del importe a ingresar',ingresar:'A ingresar con NRC',deuda:'Reconocimiento de deuda',rectificar:'Rectificación de la autoliquidación anterior',compensar:'A compensar',devolver:'Solicitud de devolución',negativa:'Resultado cero / negativa'} as Record<string,string>)[v]||v;}
 export default function Home(){
+const certs=[{company:clientCompany().name,nif:clientCompany().nif},{company:'OTRA EMPRESA SIMULADA',nif:'SIM000003'}];
 const [view,setView]=useState<'portal'|'procedure'|'access'|'form'|'receipt'|'history'|'report'>('portal');
 const [reportModel,setReportModel]=useState<ReportModel>('190'),[reportHistory,setReportHistory]=useState(false);
 const openReport=(m:ReportModel,h=false)=>{setReportModel(m);setReportHistory(h);setView('report');window.scrollTo(0,0);};

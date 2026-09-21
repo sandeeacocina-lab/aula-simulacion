@@ -4,7 +4,7 @@ import {render,screen,fireEvent,cleanup,waitFor,within} from '@testing-library/r
 import {indexedDB} from 'fake-indexeddb';
 import initSqlJs from 'sql.js';
 import {webcrypto} from 'node:crypto';
-import Home from '../components/home';
+import Home,{CompanyHome} from '../components/home';
 import Tax from '../components/tributaria/tax-workspace';
 import Bank from '../components/bank/bank-workspace';
 import {setEngineForTests,freshDatabase,persistDatabase} from '../lib/local/runtime';
@@ -16,8 +16,14 @@ window.scrollTo=vi.fn();HTMLElement.prototype.scrollIntoView=vi.fn();
 beforeAll(async()=>{setEngineForTests(await initSqlJs());});
 beforeEach(async()=>{localStorage.clear();const db=await freshDatabase();await persistDatabase(db.export(),{replaceFiles:true});db.close();});
 afterEach(cleanup);
-it('ofrece cinco accesos independientes y una empresa genérica',()=>{
- render(<Home/>);const services=screen.getByRole('region',{name:'Servicios disponibles'});expect(within(services).getAllByRole('link')).toHaveLength(5);expect(screen.getByRole('heading',{name:'Empresa de prácticas, S.L.'})).toBeTruthy();expect(screen.queryByText(/ARREA|DECASARRE/)).toBeNull();
+it('ofrece cinco accesos independientes y una ruta para cambiar de empresa',()=>{
+ render(<CompanyHome/>);const services=screen.getByRole('region',{name:'Servicios disponibles'});expect(within(services).getAllByRole('link')).toHaveLength(5);expect(screen.getByRole('link',{name:'Cambiar empresa'}).getAttribute('href')).toBe('#/');
+});
+it('muestra las dos empresas y permite preparar una nueva sin flechas de navegación',()=>{
+ render(<Home/>);expect(screen.getByRole('button',{name:'Entrar en ARREA Eventos'})).toBeTruthy();expect(screen.getByRole('button',{name:'Entrar en DECASARRE'})).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'Crear otra empresa'}));
+ expect(screen.getByRole('dialog')).toBeTruthy();expect(screen.getByLabelText('Razón social')).toHaveProperty('value','');expect(screen.getByLabelText('NIF de prácticas')).toHaveProperty('value','B12345674');
+ fireEvent.click(screen.getByRole('button',{name:'Cancelar'}));expect(screen.queryByRole('dialog')).toBeNull();
 });
 it('abre una cuenta desde el formulario y guarda el saldo en la práctica local',async()=>{
  render(<Bank/>);fireEvent.click(await screen.findByRole('button',{name:'Abrir cuenta de prácticas'}));

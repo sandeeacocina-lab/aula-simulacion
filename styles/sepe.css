@@ -31,5 +31,80 @@
 .sepe-external-dialog [data-slot=dialog-description]{font:15px/1.7 Arial,Helvetica,sans-serif;color:#526777}
 .sepe-external-destination{font-size:14px;padding:12px 14px;background:#f2f6fa;border:1px solid #c5d5e2;color:#164e7a}
 .sepe-external-dialog .sepe-actions{justify-content:flex-end;margin-top:4px}
+.sepe-skip{position:fixed;left:16px;top:-100px;z-index:100;background:white;padding:12px 18px;border:2px solid #164e7a}
+.sepe-skip:focus{top:12px}
+.sepe-app .sepe-sede-nav a:not([data-slot=button]){color:#fff;display:flex;align-items:center;min-height:44px;text-decoration:underline;text-underline-offset:4px}
+.sepe-app .sepe-application-menu a{display:flex;align-items:center;width:100%;min-height:48px;padding:16px;font-size:14px;line-height:1.5;color:#164e7a;border-bottom:1px solid #e0e7ed;text-decoration:none;overflow-wrap:anywhere}
+.sepe-app .sepe-application-menu a:hover{background:#f1f6fa;text-decoration:underline}
+.sepe-app .sepe-application-menu a[aria-current=page]{background:#eaf1f7;color:#154f7c;box-shadow:inset 4px 0 #d2a827;font-weight:600}
+.sepe-service-heading h1:focus{outline:none;scroll-margin-top:65px}
+.sepe-service-list{display:grid;gap:16px}
+.sepe-app .sepe-service-list>a{display:flex;gap:18px;align-items:flex-start;padding:23px;background:#fff;border:1px solid #c5d5e2;border-left:4px solid #d2a827;color:#164e7a;text-decoration:none}
+.sepe-app .sepe-service-list>a:hover{background:#f3f7fb;border-color:#83a6c1;text-decoration:none}
+.sepe-service-list>a>svg{flex-shrink:0;margin-top:4px}
+.sepe-service-list>a>div{min-width:0}
+.sepe-service-list h3{font-size:20px;line-height:1.35;font-weight:600;margin:0 0 8px}
+.sepe-service-list p{font-size:16px;line-height:1.6;color:#415a6c;margin:0 0 13px}
+.sepe-service-list span{font-size:14px;text-decoration:underline;text-underline-offset:3px;font-weight:600}
+.sepe-filter-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.sepe-filter-dates{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sepe-filter-actions{grid-column:1/-1}
+.sepe-filter-dates label{min-width:0}
+.sepe-app :is(.sepe-central-bar,.sepe-breadcrumb,.sepe-footer){font-size:14px}
+.sepe-footer button{font-size:14px;min-height:44px}
+.sepe-app :is(.sepe-steps li,.sepe-file-limit,.sepe-result-count,.sepe-table strong,.sepe-status,.sepe-pagination){font-size:14px}
+.sepe-app :is(.sepe-application-menu button,[data-slot=button]),.sepe-help-dialog [data-slot=button],.sepe-print-page [data-slot=button]{min-height:44px}
+.sepe-app :is([data-slot=button]:disabled){opacity:1;background:#e5ebf0;color:#4b6070;border-color:#bfccd5;cursor:not-allowed}
+.sepe-models-intro,.sepe-models-resource p,.sepe-models-practice ol,.sepe-help-content{font-size:16px}
+.sepe-help-content{max-height:none;overflow:visible}
+.sepe-help-dialog{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior-y:contain}
+.sepe-table-wrap{width:100%;max-width:100%;min-width:0;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.sepe-table-wrap:focus-visible{outline:3px solid #d4a800;outline-offset:3px}
+.sepe-app :is(.sepe-session,.sepe-central-bar,.sepe-footer){overflow-wrap:anywhere}
+@media screen and (max-width:760px){
+ .sepe-workspace-frame{display:block}
+ .sepe-application-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:20px}
+ .sepe-menu-label{display:none}
+ .sepe-app .sepe-application-menu a{padding:12px;font-size:14px}
+ .sepe-app .sepe-application-menu a[aria-current=page]{box-shadow:inset 0 -3px #d2a827}
+ .sepe-application-menu button:last-child{grid-column:1/-1;font-size:14px;padding:12px}
+ .sepe-shell{width:calc(100% - 32px)}
+ .sepe-sede-header{width:calc(100% - 32px);flex-wrap:wrap;gap:10px 20px;padding:18px 0;min-height:96px}
+ .sepe-sede-header>a{max-width:100%;min-width:0}
+ .sepe-sede-header .sepe-identity{width:min(260px,100%);height:auto}
+ .sepe-sede-title{font-size:20px;text-align:left;max-width:none}
+ .sepe-sede-title span{display:none}
+ .sepe-sede-nav>div{width:calc(100% - 32px);gap:15px}
+ .sepe-content{padding:22px 18px}
+ .sepe-service-heading h1{font-size:28px;overflow-wrap:anywhere}
+ .sepe-central-bar{flex-wrap:wrap;gap:3px 16px;padding:8px 16px}
+ .sepe-central-bar a{min-height:36px}
+ .sepe-steps{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+ .sepe-steps li,.sepe-steps li:last-child{display:flex;align-items:center;padding:0;border:0;font-size:14px}
+ .sepe-file-selector{flex-wrap:wrap;gap:10px}
+ .sepe-file-selector>span{flex-basis:100%;border-right:1px solid #aaa}
+ .sepe-file-selector [data-slot=button]{width:100%}
+ .sepe-service-list>a>svg{display:none}
+ .sepe-app .sepe-service-list>a{padding:19px 17px}
+ .sepe-service-list h3{font-size:19px}
+ .sepe-help-dialog[data-slot=dialog-content]{width:calc(100vw - 24px);max-width:calc(100vw - 24px)!important;padding:24px 18px}
+ .sepe-help-dialog [data-slot=dialog-title]{padding-right:26px;line-height:1.35}
+ .sepe-help-dialog>[data-slot=dialog-close]{top:4px;right:4px;width:44px;height:44px;display:grid;place-items:center}
+ .sepe-app fieldset{min-inline-size:0}
+ .sepe-app input{min-width:0;max-width:100%;font-size:16px!important}
+ .sepe-pagination,.sepe-pagination>div{flex-wrap:wrap;gap:12px}
+ .sepe-pagination [data-slot=button]{font-size:14px}
+ .sepe-print-controls,.sepe-print-controls>div{flex-wrap:wrap}
+}
+@media screen and (max-width:550px){
+ .sepe-filter-dates{grid-template-columns:minmax(0,1fr)}
+ .sepe-result-data,.sepe-contract-overview{grid-template-columns:minmax(0,1fr)}
+ .sepe-result{padding:20px 16px}
+ .sepe-models-resource>div{min-width:0}
+ .sepe-actions>[data-slot=button]{width:100%}
+ .sepe-receipt-heading{flex-wrap:wrap}
+ .sepe-receipt-heading>span{text-align:left}
+}
+@media(prefers-reduced-motion:reduce){.sepe-spin{animation:none}}
 @media(max-width:720px){.sepe-application-menu button:last-child{grid-column:auto;border-top:0}}
 @media(max-width:550px){.sepe-models-resource{padding:20px 16px;gap:12px}.sepe-models-resource>svg{display:none}.sepe-models-resource [data-slot=button]{width:100%}.sepe-models-resource [data-slot=button] svg{flex-shrink:0}}

@@ -1,3 +1,4 @@
+import type {MailSignature} from './mail-signature';
 import type {MailAttachment} from './mail-files';
 import {getProfile} from './local/profile';
 export const MAILBOX=getProfile().mailbox;
@@ -6,10 +7,10 @@ export function newMailId(){const b=crypto.getRandomValues(new Uint8Array(16));b
 export const FOLDERS=['inbox','sent','drafts','archive','trash'] as const;
 export type Folder=typeof FOLDERS[number];
 export const folderNames:Record<Folder,string>={inbox:'Bandeja de entrada',sent:'Enviados',drafts:'Borradores',archive:'Archivo',trash:'Papelera'};
-export type MailMessage={id:string;companyId:string;senderName:string;senderAddress:string;recipient:string;subject:string;body:string;source:'web'|'simulation'|'mail';folder:Folder;homeFolder:'inbox'|'sent'|'drafts';isRead:number;revision:number;replyTo:string|null;createdAt:string;updatedAt:string;attachments:MailAttachment[]};
+export type MailMessage={id:string;companyId:string;senderName:string;senderAddress:string;recipient:string;subject:string;body:string;source:'web'|'simulation'|'mail';folder:Folder;homeFolder:'inbox'|'sent'|'drafts';isRead:number;revision:number;replyTo:string|null;createdAt:string;updatedAt:string;attachments:MailAttachment[];signature?:MailSignature|null};
 export type MailSummary=Omit<MailMessage,'body'>&{preview:string};
 export type MailList={messages:MailSummary[];total:number;counts:Record<Folder,number>;unread:number;page:number;pageSize:number};
-export type MailEditor={id:string;revision?:number;senderName:string;senderAddress:string;recipient:string;subject:string;body:string;replyTo?:string|null};
+export type MailEditor={id:string;revision?:number;senderName:string;senderAddress:string;recipient:string;subject:string;body:string;replyTo?:string|null;signature?:MailSignature|null};
 export const scenarios=[
  {name:'Solicitud de presupuesto',senderName:'Nortea Consultores',senderAddress:'eventos@nortea.test',subject:'Presupuesto para una jornada de empresa',body:'Buenos días:\n\nEstamos preparando una jornada para 60 personas y nos gustaría recibir una propuesta de vuestra empresa. Necesitamos información sobre vuestros productos y servicios. La fecha y el lugar están pendientes de confirmar.\n\n¿Podríais indicarnos qué información necesitáis y enviarnos un presupuesto desglosado?\n\nGracias.\nDepartamento de Comunicación\nNortea Consultores'},
  {name:'Reclamación de una factura',senderName:'Lumen Audiovisuales',senderAddress:'administracion@lumen.test',subject:'Factura AV-026 pendiente de pago',body:'Buenos días:\n\nAl revisar nuestra contabilidad, figura pendiente la factura AV-026, por importe de 726,00 €, correspondiente a nuestro último suministro.\n\n¿Podéis comprobarlo e indicarnos la fecha prevista de pago? Si ya se ha abonado, os agradeceríamos el justificante.\n\nUn saludo,\nAdministración\nLumen Audiovisuales'},

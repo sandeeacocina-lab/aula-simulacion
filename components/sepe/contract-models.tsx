@@ -21,8 +21,8 @@ export default function ContractModels(){
     <Dialog>
      <DialogTrigger asChild><Button type="button">Consultar y descargar modelos</Button></DialogTrigger>
      <DialogContent className="sepe-help-dialog sepe-external-dialog">
-      <DialogTitle>Salida de la aula de simulación</DialogTitle>
-      <DialogDescription>Va a abrir la web oficial del SEPE en una nueva pestaña. La aula de simulación permanecerá abierta.</DialogDescription>
+      <DialogTitle>Salida del aula de simulación</DialogTitle>
+      <DialogDescription>Va a abrir la web oficial del SEPE en una nueva pestaña. El aula de simulación permanecerá abierta.</DialogDescription>
       <p className="sepe-external-destination">www.sepe.es · Modelos de contratos</p>
       <div className="sepe-actions">
        <DialogClose asChild><Button type="button" variant="outline">Cancelar</Button></DialogClose>

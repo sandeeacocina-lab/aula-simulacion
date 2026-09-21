@@ -30,6 +30,30 @@
 @media(max-width:580px){.mail-signature{align-items:flex-start;flex-direction:column;gap:18px}.mail-signature-details{padding-left:15px}.mail-signature-editor>.mail-field{max-width:none}}
 
 .mail-row-author{display:block;font-size:12px;color:#715b4d;margin:7px 0 5px}
+.mail-app{--mail-accent:#087f8c;--sidebar-accent:color-mix(in srgb,var(--mail-accent) 12%,white);--sidebar-accent-foreground:var(--mail-accent)}
+.mail-app .mail-header{border-top-color:var(--mail-accent)}
+.mail-app .mail-folder[data-active=true]{background:color-mix(in srgb,var(--mail-accent) 12%,white);color:var(--mail-accent)}
+.mail-app .mail-search:focus-within{outline-color:var(--mail-accent)}
+.mail-app .mail-row.selected{border-left-color:var(--mail-accent);background:color-mix(in srgb,var(--mail-accent) 5%,white)}
+.mail-app .mail-row.unread h3:before{background:var(--mail-accent)}
+.mail-app .mail-file-actions a{color:var(--mail-accent)}
+.mail-signature a:focus-visible{outline-color:var(--signature-color,#087f8c)}
+.mail-company-signature .mail-signature-details{border-color:var(--signature-color)}
+.mail-company-signature .mail-signature-details>strong,.mail-company-signature .mail-signature-contact a{color:var(--signature-color)}
+.mail-incoming-signature .mail-signature-details{border-color:var(--signature-color);font-size:14px}
+.mail-incoming-signature .mail-signature-details>strong,.mail-incoming-signature .mail-signature-contact a{color:var(--signature-color)}
+.mail-incoming-signature .mail-signature-contact{font-size:14px;flex-direction:column;gap:3px}
+.mail-incoming-signature .mail-signature-company{font-weight:700;letter-spacing:.02em}
+.mail-incoming-signature-editor{border-block:1px solid #e6ddd2;padding:20px 0;margin:22px 0}
+.mail-signature-editor-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.mail-signature-editor-heading h3{font-size:17px;font-weight:650;color:#33291f}
+.mail-signature-editor-heading [data-slot=button]{min-height:44px;font-size:14px}
+.mail-signature-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;min-width:0}
+.mail-signature-fields .mail-field{min-width:0}
+.mail-signature-fields select{width:100%;min-height:44px;padding:8px 12px;border:1px solid #d9d0c6;border-radius:5px;background:#fff;font-size:16px;color:#33291f}
+.mail-signature-preview-label{font-size:14px;color:#645347;margin-top:4px}
+.mail-incoming-signature-editor .mail-incoming-signature{margin-top:6px;padding:18px;background:#faf8f5;border:1px solid #e6ddd2;border-radius:6px}
+@media(max-width:580px){.mail-signature-fields{grid-template-columns:1fr}.mail-signature-editor-heading{flex-wrap:wrap}.mail-incoming-signature-editor .mail-incoming-signature{padding:15px}.mail-signature-fields input{min-height:44px}}
 .mail-download-menu{background:#fff;color:#33291f;min-width:280px;max-width:calc(100vw - 28px);border-color:#d9cabc}
 .mail-download-menu [data-slot=dropdown-menu-item]{padding:12px;gap:12px;align-items:flex-start;cursor:pointer}
 .mail-download-menu [data-slot=dropdown-menu-item][data-highlighted]{background:#f7edf2;color:#8a0038}

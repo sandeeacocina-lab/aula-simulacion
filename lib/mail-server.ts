@@ -5,9 +5,10 @@ import {MailError} from './mail-error';
 import {MAX_TOTAL_BYTES} from './mail-files';
 import {attachmentPlan,attachmentResponse,publicAttachments,storedAttachments,putAttachments,removeAttachments,exportAttachments} from './mail-attachments';
 import {mailEML,mailExportHeaders} from './mail-export';
-const fields='id, company_id AS companyId, sender_name AS senderName, sender_address AS senderAddress, recipient, subject, body, source, folder, home_folder AS homeFolder, is_read AS isRead, revision, reply_to AS replyTo, created_at AS createdAt, updated_at AS updatedAt, attachments AS attachmentManifest';
-type RawMessage=Omit<MailMessage,'attachments'>&{attachmentManifest:string};
-function publicMessage(raw:RawMessage):MailMessage{const {attachmentManifest,...m}=raw;return {...m,attachments:publicAttachments(attachmentManifest)};}
+import {normalizeSignature,storedSignature} from './mail-signature';
+const fields='id, company_id AS companyId, sender_name AS senderName, sender_address AS senderAddress, recipient, subject, body, source, folder, home_folder AS homeFolder, is_read AS isRead, revision, reply_to AS replyTo, created_at AS createdAt, updated_at AS updatedAt, attachments AS attachmentManifest, corporate_signature AS signatureManifest';
+type RawMessage=Omit<MailMessage,'attachments'|'signature'>&{attachmentManifest:string;signatureManifest:string};
+function publicMessage(raw:RawMessage):MailMessage{const {attachmentManifest,signatureManifest,...m}=raw;return {...m,attachments:publicAttachments(attachmentManifest),signature:storedSignature(signatureManifest)};}
 function db(){if(!env.DB)throw new MailError('El correo no está disponible temporalmente. Conserva el texto y vuelve a intentarlo.',503);return env.DB;}
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 function text(value:unknown,label:string,max:number,required=true){if(typeof value!=='string'||value.length>max||(required&&!value.trim())||/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value))throw new MailError('Revisa '+label+'.');return value.trim();}
@@ -85,6 +86,8 @@ export function writeMail(request:Request,web=false){return boundary(async()=>{
  }
  if(!['receive','send','draft'].includes(String(action)))throw new MailError('Acción no válida.');
  const key=id(p.id),incoming=action==='receive',draft=action==='draft';
+ let signature=null;try{signature=incoming&&!web?normalizeSignature(p.signature):null;}catch(e){throw new MailError((e as Error).message);}
+ const signatureManifest=JSON.stringify(signature);
  const senderName=incoming?text(p.senderName,'el nombre de la empresa',100):(text(p.senderName??'','el nombre de la firma',100,false)||companyProfile().name);
  const senderAddress=incoming?email(p.senderAddress):companyProfile().mailbox;
  const recipient=incoming?companyProfile().mailbox:email(p.recipient,!draft);
@@ -94,7 +97,7 @@ export function writeMail(request:Request,web=false){return boundary(async()=>{
  const existing=await rawMessage(key);
  const current=existing?storedAttachments(existing.attachmentManifest):[];
  const plan=await attachmentPlan(key,p.attachmentIds,files,current);
- const sameText=(m:RawMessage)=>m.subject===subject&&m.body===body&&m.senderName===senderName&&m.senderAddress===senderAddress&&m.recipient===recipient&&m.source===source&&m.homeFolder===folder&&m.replyTo===replyTo;
+ const sameText=(m:RawMessage)=>m.subject===subject&&m.body===body&&m.senderName===senderName&&m.senderAddress===senderAddress&&m.recipient===recipient&&m.source===source&&m.homeFolder===folder&&m.replyTo===replyTo&&JSON.stringify(storedSignature(m.signatureManifest))===signatureManifest;
  // A retry after a lost response must retain exactly the saved files and message.
  if(existing&&sameText(existing)&&plan.same)return json(web?{ok:true,reference:existing.id}:{message:publicMessage(existing)});
  if(existing&&(existing.folder!=='drafts'||incoming||!Number.isInteger(p.revision)||p.revision!==existing.revision))throw new MailError('Otra persona ha cambiado este mensaje. Tu texto y archivos se conservan aquí; actualiza antes de guardar.',409);
@@ -108,7 +111,7 @@ export function writeMail(request:Request,web=false){return boundary(async()=>{
    const r=await db().prepare("UPDATE mail_messages SET sender_name=?,recipient=?,subject=?,body=?,folder=?,home_folder=?,revision=revision+1,updated_at=?,created_at=?,attachments=? WHERE company_id=? AND id=? AND revision=? AND folder='drafts'").bind(senderName,recipient,subject,body,folder,folder,now,draft?existing.createdAt:now,manifest,companyId(),key,p.revision).run();
    changed=!!r.meta.changes;
   }else{
-   const r=await db().prepare('INSERT INTO mail_messages (id,company_id,sender_name,sender_address,recipient,subject,body,source,folder,home_folder,is_read,revision,reply_to,created_at,updated_at,attachments) VALUES (?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?) ON CONFLICT(id) DO NOTHING').bind(key,companyId(),senderName,senderAddress,recipient,subject,body,source,folder,folder,incoming?0:1,replyTo,now,now,manifest).run();
+   const r=await db().prepare('INSERT INTO mail_messages (id,company_id,sender_name,sender_address,recipient,subject,body,source,folder,home_folder,is_read,revision,reply_to,created_at,updated_at,attachments,corporate_signature) VALUES (?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?,?) ON CONFLICT(id) DO NOTHING').bind(key,companyId(),senderName,senderAddress,recipient,subject,body,source,folder,folder,incoming?0:1,replyTo,now,now,manifest,signatureManifest).run();
    changed=!!r.meta.changes;
   }
  }catch(e){

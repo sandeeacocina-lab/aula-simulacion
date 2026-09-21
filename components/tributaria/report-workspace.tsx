@@ -16,12 +16,12 @@ import {money,periodOptions} from '@/lib/tributaria/tax';
 import {reportId,reportNames,reportHelp,reportScope,reportFields,blankReport,newReportRow,rowAmount,reportTotals,checkReport,type ReportModel,type Report,type ReportRow,type ReportReceipt} from '@/lib/tributaria/reports';
 import {downloadReport} from '@/lib/tributaria/report-pdf';
 import {importNominaSol190,type Imported190} from '@/lib/tributaria/import-190';
-const certs=[[clientCompany().nif,clientCompany().name],['SIM000003','OTRA EMPRESA SIMULADA']];
 const uid=reportId;
 function Input({label,value,onChange,required=false,numeric=false,max=100}:{label:string;value:string;onChange:(v:string)=>void;required?:boolean;numeric?:boolean;max?:number}){return <label className="field"><span className="field-label">{label}{required?' *':''}</span><input value={value} maxLength={max} inputMode={numeric?'decimal':'text'} onChange={e=>onChange(e.target.value)}/></label>}
 function Choice({label,value,onChange,options}:{label:string;value:string;onChange:(v:string)=>void;options:[string,string][]}){return <div className="field"><span className="field-label">{label}</span><Select value={value||undefined} onValueChange={onChange}><SelectTrigger aria-label={label}><SelectValue placeholder="Seleccione"/></SelectTrigger><SelectContent>{options.map(([key,name])=><SelectItem key={key} value={key}>{name}</SelectItem>)}</SelectContent></Select></div>}
 function Section({title,children}:{title:string;children:React.ReactNode}){return <section className="tax-section"><h2><span>{title}</span></h2><div className="section-body">{children}</div></section>}
 export default function ReportWorkspace({model,onExit,showHistory=false}:{model:ReportModel;onExit:()=>void;showHistory?:boolean}){
+const certs=[[clientCompany().nif,clientCompany().name],['SIM000003','OTRA EMPRESA SIMULADA']];
 const [d,setD]=useState<Report>(blankReport(model)),[screen,setScreen]=useState<'procedure'|'form'|'history'|'receipt'>(showHistory?'history':'procedure'),[tab,setTab]=useState('summary');
 const [cert,setCert]=useState(false),[certIndex,setCertIndex]=useState('0'),[sign,setSign]=useState(false),[conform,setConform]=useState(false),[history,setHistory]=useState<ReportReceipt[]>([]),[receipt,setReceipt]=useState<ReportReceipt|null>(null),[check,setCheck]=useState<ReturnType<typeof checkReport>|null>(null),[editing,setEditing]=useState<ReportRow|null>(null),[remove,setRemove]=useState<string|null>(null);
 useEffect(()=>{try{const parsed=JSON.parse(localStorage.getItem('aula-informativas-v1')||'[]');if(Array.isArray(parsed))setHistory(parsed.filter(r=>r?.report?.model===model&&Array.isArray(r.report.rows)&&typeof r.id==='string'));}catch{}},[model]);

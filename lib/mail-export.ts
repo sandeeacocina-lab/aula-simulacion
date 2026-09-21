@@ -1,5 +1,6 @@
 import {type MailMessage} from './mail-types';
-import {mailLogo as genericMailLogo} from './mail-logo';
+import {profileMailLogo,signatureMailLogo} from './select-mail-logo';
+import {signedContent,signedText} from './mail-signature';
 import {companies,validCompany} from './companies';
 
 export type ExportAttachment={name:string;type:string;bytes:Uint8Array};
@@ -20,14 +21,18 @@ const oneLine=(value:string)=>value.replace(/[\r\n\u0000-\u001f\u007f]/g,' ');
 function headerText(value:string){const chunks:string[]=[];let chunk='';for(const char of oneLine(value)){if(new TextEncoder().encode(chunk+char).length>42){chunks.push(chunk);chunk='';}chunk+=char;}if(chunk)chunks.push(chunk);return chunks.map(s=>'=?UTF-8?B?'+utf8(s)+'?=').join('\r\n ');}
 
 export function mailEML(m:MailMessage,attachments:ExportAttachment[]){
- const profile=companies[validCompany(m.companyId)?m.companyId:'demo'],mailLogo=genericMailLogo;
+ const profile=companies[validCompany(m.companyId)?m.companyId:'demo'];
+ const mailLogo=m.signature?signatureMailLogo(m.signature):m.source==='mail'?profileMailLogo(profile):null;
+ const logoId=mailLogo?.id+'-logo@aula.test',content=signedContent(m);
  const mixed='aula_mixed_'+m.id,alternative='aula_alt_'+m.id,related='aula_related_'+m.id;
- const body=m.body.replace(/\r\n?/g,'\n').replace(/\n/g,'\r\n');
- const plain=body+(m.source==='mail'?'\r\n\r\n'+[m.senderName,...(m.senderName===profile.name?[]:[profile.name]),profile.activity,profile.mailbox,profile.website].join('\r\n'):'');
- const signatureHtml=m.source==='mail'?`<table role="presentation" style="margin-top:28px;border-collapse:collapse"><tr><td style="padding-right:22px;vertical-align:middle"><span><img src="cid:${profile.id}-logo@${profile.id}.test" width="130" alt="${html(profile.name)}"></span></td><td style="border-left:3px solid ${'#087f8c'};padding-left:20px;font-size:14px;line-height:1.6"><strong style="color:${'#086777'};font-size:17px">${html(m.senderName)}</strong><br>${m.senderName===profile.name?'':html(profile.name)+'<br>'}${html(profile.activity)}<br>${html(profile.mailbox)}</td></tr></table>`:'';
- const htmlBody=`<!doctype html><html lang="es"><head><meta charset="utf-8"></head><body style="font-family:Arial,sans-serif;color:#33291f;line-height:1.7"><div style="white-space:pre-wrap;overflow-wrap:anywhere">${html(m.body)}</div>${signatureHtml}</body></html>`;
+ const body=signedText(m).replace(/\r\n?/g,'\n').replace(/\n/g,'\r\n');
+ const plain=body+(m.source==='mail'&&!m.signature?'\r\n\r\n'+[m.senderName,...(m.senderName===profile.name?[]:[profile.name]),profile.activity,profile.mailbox,profile.website].filter(Boolean).join('\r\n'):'');
+ const logoHtml=mailLogo?`<td style="padding-right:22px;vertical-align:middle"><img src="cid:${logoId}" width="130" alt="${html(m.signature?.organization||profile.name)}"></td>`:'';
+ let signatureHtml=m.source==='mail'?`<table role="presentation" style="margin-top:28px;border-collapse:collapse"><tr>${logoHtml}<td style="border-left:3px solid ${profile.accent};padding-left:20px;font-size:14px;line-height:1.6"><strong style="color:${profile.accent};font-size:17px">${html(m.senderName)}</strong><br>${m.senderName===profile.name?'':html(profile.name)+'<br>'}${html(profile.activity)}<br>${html(profile.mailbox)}${profile.website?`<br><a href="${html(profile.website)}" style="color:${profile.accent}">Web de ${html(profile.shortName)}</a>`:''}</td></tr></table>`:'';
+ if(m.signature){const s=m.signature;signatureHtml=`<table role="presentation" style="margin-top:28px;border-collapse:collapse"><tr>${logoHtml}<td style="border-left:3px solid ${s.color};padding-left:20px;font-size:14px;line-height:1.6"><strong style="color:${s.color};font-size:17px">${html(s.name||s.organization)}</strong>${[s.role,s.name?s.organization:'',s.location,...content.extraLines,s.email,s.phone].filter(Boolean).map(line=>'<br>'+html(line)).join('')}${s.website?`<br><a href="${html(s.website)}" style="color:${s.color}">${html(s.website)}</a>`:''}</td></tr></table>`;}
+ const htmlBody=`<!doctype html><html lang="es"><head><meta charset="utf-8"></head><body style="font-family:Arial,sans-serif;color:#33291f;line-height:1.7"><div style="white-space:pre-wrap;overflow-wrap:anywhere">${html(content.body)}</div>${signatureHtml}</body></html>`;
  const lines=[`From: ${headerText(m.senderName)} <${oneLine(m.senderAddress)}>`,`To: ${oneLine(m.recipient)}`,`Subject: ${headerText(m.subject||'Sin asunto')}`,`Date: ${new Date(m.createdAt).toUTCString()}`,`Message-ID: <${m.id}@${profile.id}.test>`,'MIME-Version: 1.0','X-Central-Simulation: true',`X-Central-Folder: ${m.homeFolder}`,...(m.homeFolder==='drafts'?['X-Unsent: 1']:[]),...(m.replyTo?[`In-Reply-To: <${m.replyTo}@${profile.id}.test>`,`References: <${m.replyTo}@${profile.id}.test>`]:[]),`Content-Type: multipart/mixed; boundary="${mixed}"`,'',`--${mixed}`,`Content-Type: multipart/alternative; boundary="${alternative}"`,'',`--${alternative}`,'Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64','',folded(utf8(plain)),`--${alternative}`,`Content-Type: multipart/related; boundary="${related}"`,'',`--${related}`,'Content-Type: text/html; charset=UTF-8','Content-Transfer-Encoding: base64','',folded(utf8(htmlBody))];
- if(m.source==='mail')lines.push(`--${related}`,'Content-Type: image/jpeg','Content-Transfer-Encoding: base64',`Content-ID: <${profile.id}-logo@${profile.id}.test>`,`Content-Disposition: inline; filename="${profile.id}-logo.jpg"`,'',folded(mailLogo.data));
+ if(mailLogo)lines.push(`--${related}`,'Content-Type: image/jpeg','Content-Transfer-Encoding: base64',`Content-ID: <${logoId}>`,`Content-Disposition: inline; filename="${mailLogo.id}-logo.jpg"`,'',folded(mailLogo.data));
  lines.push(`--${related}--`,`--${alternative}--`);
  for(const file of attachments){
   const encoded=Array.from(new TextEncoder().encode(file.name),b=>'%'+b.toString(16).padStart(2,'0').toUpperCase());
