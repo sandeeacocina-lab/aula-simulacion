@@ -31,7 +31,7 @@ it('abre una cuenta desde el formulario y guarda el saldo en la práctica local'
  fireEvent.click(screen.getByRole('checkbox'));
  fireEvent.click(screen.getByRole('button',{name:'Crear cuenta'}));
  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
- const state=await (await localRequest('/api/banco')).json();expect(state.account.balance).toBe(150000);expect(screen.getByText('Saldo disponible')).toBeTruthy();
+ const state=await (await localRequest('/api/banco')).json();expect(state.account.balance).toBe(150000);expect(screen.getByText('Saldo disponible')).toBeTruthy();expect(screen.getByRole('link',{name:'Descargar CSV'}).getAttribute('href')).toContain('export%3Dcsv');expect(screen.getByRole('link',{name:'Descargar PDF'}).getAttribute('href')).toContain('export%3Dpdf');
 });
 it('presenta un modelo 303 con confirmación, conserva el justificante y permite borrarlo',async()=>{
  render(<div className="tax-app"><Tax/></div>);

@@ -68,8 +68,21 @@ export function readBank(request:Request){return boundary(async()=>{
   }return json(await details(id));
  }
  const {where,args}=filter(url);
- if(url.searchParams.get('export')==='csv'){
-  const rows=await db().prepare(`SELECT ${movementFields} FROM bank_movements WHERE ${where} ORDER BY id DESC LIMIT 10000`).bind(...args).all<BankMovement>();
+ const statementFields=movementFields.replace('delta,balance,','delta,statement_balance AS balance,');
+ // Build balances over the complete account before applying statement filters.
+ // Recorded receipt balances and the stored ledger remain unchanged.
+ const statementSource='(SELECT *,SUM(delta) OVER (ORDER BY booking_date ASC,id ASC ROWS UNBOUNDED PRECEDING) AS statement_balance FROM bank_movements WHERE company_id=?)';
+ const statementSQL=`SELECT ${statementFields} FROM ${statementSource} WHERE ${where} ORDER BY booking_date ASC,id ASC`;
+ const format=url.searchParams.get('export');
+ if(format==='csv'||format==='pdf'){
+  const rows=await db().prepare(statementSQL+' LIMIT 10000').bind(companyId(),...args).all<BankMovement>();
+  if(format==='pdf'){
+   const a=await account();if(!a)throw new BankError('Abre primero la cuenta para descargar el extracto.',409);
+   const {bankStatementPDF}=await import('./bank-statement-pdf');
+   const profile=companyProfile(),bytes=bankStatementPDF({company:{name:profile.name,nif:profile.nif},account:a,movements:rows.results,from:url.searchParams.get('from')||'',to:url.searchParams.get('to')||'',search:(url.searchParams.get('q')||'').trim().slice(0,120)});
+   const filename='extracto-simulado-'+profile.shortName.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.pdf';
+   return new Response(bytes as BodyInit,{headers:{'Content-Type':'application/pdf','Content-Disposition':`attachment; filename="${filename}"`,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+  }
   const cell=(v:unknown)=>'"'+String(v).replace(/^\s*[=+@\-\t\r]/,"'$&").replaceAll('"','""')+'"';
   const table=[['Registro','Fecha','Concepto','Empresa o persona','Referencia','IBAN','Entrada EUR','Salida EUR','Saldo EUR'],...rows.results.map(r=>[r.id,r.bookingDate,r.concept,r.name,r.reference,r.iban,r.delta>0?(r.delta/100).toFixed(2).replace('.',','):'',r.delta<0?(-r.delta/100).toFixed(2).replace('.',','):'',(r.balance/100).toFixed(2).replace('.',',')])];
   return new Response('\uFEFF'+table.map(row=>row.map(cell).join(';')).join('\r\n'),{headers:{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':`attachment; filename="extracto-${companyId()}.csv"`,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -79,9 +92,9 @@ export function readBank(request:Request){return boundary(async()=>{
  const showMovements=view==='full'||view==='account',showBatches=view==='full'||view==='history';
  const result=await db().batch([
   db().prepare(`SELECT ${accountFields} FROM bank_accounts WHERE id=?`).bind(companyId()),
-  showMovements?db().prepare(`SELECT ${movementFields} FROM bank_movements WHERE ${where} ORDER BY id DESC LIMIT 30 OFFSET ?`).bind(...args,page*30):db().prepare('SELECT 1 WHERE 0'),
+  showMovements?db().prepare(statementSQL+' LIMIT 30 OFFSET ?').bind(companyId(),...args,page*30):db().prepare('SELECT 1 WHERE 0'),
   db().prepare(`SELECT COUNT(*) AS total,COALESCE(SUM(CASE WHEN delta>0 THEN delta ELSE 0 END),0) AS credits,COALESCE(SUM(CASE WHEN delta<0 THEN -delta ELSE 0 END),0) AS debits FROM bank_movements WHERE ${where}`).bind(...args),
-  showBatches?db().prepare(`SELECT ${batchFields} FROM bank_batches WHERE company_id=? ORDER BY created_at DESC,id DESC LIMIT 20`).bind(companyId()):db().prepare('SELECT 1 WHERE 0'),
+  showBatches?db().prepare(`SELECT ${batchFields} FROM (SELECT * FROM bank_batches WHERE company_id=? ORDER BY created_at DESC,id DESC LIMIT 20) ORDER BY booking_date ASC,created_at ASC,id ASC`).bind(companyId()):db().prepare('SELECT 1 WHERE 0'),
  ]);
  const saved=result[0].results[0]?null:await db().prepare('SELECT iban FROM bank_preferences WHERE id=?').bind(companyId()).first<{iban:string}>();
  return json({preferredIban:saved?.iban??companyProfile().iban,account:result[0].results[0]||null,movements:result[1].results,batches:(result[3].results as BatchRow[]).map(cleanBatch),...(result[2].results[0] as {total:number;credits:number;debits:number}),page,pageSize:30});

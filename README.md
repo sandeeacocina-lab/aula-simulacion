@@ -26,7 +26,7 @@ El profesorado puede preparar un supuesto, descargar su copia y compartirla con 
 | Agencia Tributaria | Modelos 303, 111, 115, 190, 347 y 349; borradores, validación didáctica, presentación, justificantes PDF y borrado. Importación del PDF educativo de NominaSOL para el 190. |
 | SEPE | Comunicación inicial de contratos desde XML; revisión, observaciones sobre NIF y CCC, detección de duplicados, historial y PDF. Enlace al catálogo oficial de modelos. |
 | Seguridad Social | Inscripción de empresas, afiliación y altas laborales; importación de RNT y RLC/DLC educativos, comprobación de coherencia, justificantes y borrado. |
-| Banca Nexo | Cuenta, saldo inicial, transferencias, cobros, nóminas, efectivo, gastos y pagos manuales; mandatos, préstamos, leasing y cuotas; remesas SEPA XML y extractos CSV. Justificantes mediante imprimir/guardar PDF. |
+| Banca Nexo | Cuenta, saldo inicial, transferencias, cobros, nóminas, efectivo, gastos y pagos manuales; mandatos, préstamos, leasing y cuotas; remesas SEPA XML y extractos CSV y PDF con los filtros de la consulta. Movimientos por fecha ascendente. Justificantes mediante imprimir/guardar PDF. |
 | Correo | Recepción simulada, borradores, respuestas, firma personalizable, adjuntos, leído/no leído, archivo y papelera; exportación PDF y EML con adjuntos. |
 
 Los pagos manuales de impuestos o cotizaciones en la banca sirven para practicar una operación bancaria: **no se vinculan a las declaraciones de los demás módulos**.
