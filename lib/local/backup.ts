@@ -20,13 +20,14 @@ async function prepareBackup(value:unknown){
   db.run('PRAGMA foreign_keys=OFF');db.run('BEGIN');let count=0;
   for(const name of tables){if(name.startsWith('documentation_')&&!b.tables[name])continue;const t=b.tables[name],schema=db.exec(`PRAGMA table_info("${name}")`)[0].values,expected=schema.map(r=>String(r[1]));
    const oldMail=name==='mail_messages'&&JSON.stringify(t?.columns)===JSON.stringify(expected.filter(column=>column!=='corporate_signature'));
-   if(!t||(!oldMail&&JSON.stringify(t.columns)!==JSON.stringify(expected))||!Array.isArray(t.rows)||t.rows.length>50000||(count+=t.rows.length)>80000)throw Error('La estructura de la copia no es válida.');
+   const oldBank=name==='bank_batches'&&JSON.stringify(t?.columns)===JSON.stringify(expected.filter(column=>column!=='receipt_details'));
+   if(!t||(!oldMail&&!oldBank&&JSON.stringify(t.columns)!==JSON.stringify(expected))||!Array.isArray(t.rows)||t.rows.length>50000||(count+=t.rows.length)>80000)throw Error('La estructura de la copia no es válida.');
    const s=db.prepare(`INSERT INTO "${name}" (${expected.map(k=>'"'+k+'"').join(',')}) VALUES (${expected.map(()=>'?').join(',')})`);
    try{for(const source of t.rows){if(!Array.isArray(source)||source.length!==t.columns.length)throw Error('La copia contiene datos no válidos.');
-     const row=oldMail?expected.map(column=>column==='corporate_signature'?'null':source[t.columns.indexOf(column)]):[...source];
+     const row=oldMail||oldBank?expected.map(column=>t.columns.includes(column)?source[t.columns.indexOf(column)]:'null'):[...source];
      if(row.length!==expected.length||row.some((v,i)=>v!==null&&(typeof v!=='string'&&typeof v!=='number'||typeof v==='number'&&!Number.isFinite(v)||String(schema[i][2]).toUpperCase()==='INTEGER'&&!Number.isSafeInteger(v)||typeof v==='string'&&v.length>5000000)))throw Error('La copia contiene datos no válidos.');
      const companyIndex=expected.indexOf('company_id');if(companyIndex>=0&&row[companyIndex]!=='demo')throw Error('Esta copia corresponde a otra plataforma.');
-     for(const key of ['data','warnings','attachments','receipt']){const i=expected.indexOf(key);if(i>=0&&row[i]!==null)JSON.parse(String(row[i]));}
+     for(const key of ['data','warnings','attachments','receipt','receipt_details']){const i=expected.indexOf(key);if(i>=0&&row[i]!==null)JSON.parse(String(row[i]));}
      const signatureIndex=expected.indexOf('corporate_signature');if(signatureIndex>=0){if(row[signatureIndex]===null)row[signatureIndex]='null';if(typeof row[signatureIndex]!=='string')throw Error('La firma corporativa de la copia no es válida.');row[signatureIndex]=JSON.stringify(normalizeSignature(JSON.parse(String(row[signatureIndex]))));}
      s.run(row);
    }}finally{s.free();}

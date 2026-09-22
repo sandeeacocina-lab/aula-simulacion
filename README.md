@@ -26,7 +26,7 @@ El profesorado puede preparar un supuesto, descargar su copia y compartirla con 
 | Agencia Tributaria | Modelos 303, 111, 115, 190, 347 y 349; borradores, validación didáctica, presentación, justificantes PDF y borrado. Importación del PDF educativo de NominaSOL para el 190. |
 | SEPE | Comunicación inicial de contratos desde XML; revisión, observaciones sobre NIF y CCC, detección de duplicados, historial y PDF. Enlace al catálogo oficial de modelos. |
 | Seguridad Social | Inscripción de empresas, afiliación y altas laborales; importación de RNT y RLC/DLC educativos, comprobación de coherencia, justificantes y borrado. |
-| Banca Nexo | Cuenta, saldo inicial, transferencias, cobros, nóminas, efectivo, gastos y pagos manuales; mandatos, préstamos, leasing y cuotas; remesas SEPA XML y extractos CSV y PDF con los filtros de la consulta. Movimientos por fecha ascendente. Justificantes mediante imprimir/guardar PDF. |
+| Banca Nexo | Cuenta, saldo inicial, transferencias, cobros, nóminas, efectivo, gastos y pagos manuales; mandatos, préstamos, leasing y cuotas; remesas SEPA XML y extractos CSV y PDF con los filtros de la consulta. Movimientos por fecha ascendente. Justificantes imprimibles con capital amortizado, intereses y capital pendiente; comisiones exentas o con IVA; abonos de intereses con retención y neto en cuenta. |
 | Correo | Recepción simulada, borradores, respuestas, firma personalizable, adjuntos, leído/no leído, archivo y papelera; exportación PDF y EML con adjuntos. |
 
 Los pagos manuales de impuestos o cotizaciones en la banca sirven para practicar una operación bancaria: **no se vinculan a las declaraciones de los demás módulos**.
@@ -82,3 +82,11 @@ Las pruebas cubren operaciones bancarias, concurrencia y saldos, contratos, regi
 React, Vite, Tailwind CSS, Radix UI, Lucide, sql.js, PDF.js y fast-xml-parser mantienen sus respectivas licencias. Las dependencias y versiones están en `package-lock.json`; sus avisos se conservan en los paquetes originales. Los iconos son Lucide (ISC). Las tipografías incrustadas se usan para permitir acentos en los justificantes.
 
 Los enlaces a organismos públicos abren páginas externas. Sus modelos y procedimientos vigentes pueden cambiar; esta herramienta es una adaptación didáctica y debe utilizarse con las indicaciones del docente.
+
+### Justificantes bancarios
+
+En **Operaciones manuales**, la comisión permite elegir **Exenta de IVA** o **Sujeta a IVA** e indicar el tipo. **Abono de intereses** pide el importe bruto, la retención y, opcionalmente, el periodo liquidado. La revisión muestra el desglose antes de contabilizar. El tipo inicial de retención es 19 %, editable según el supuesto; no se aplica IVA automáticamente a todas las comisiones.
+
+Las cuotas de préstamos y leasing identifican el contrato, el vencimiento, el TIN, el capital amortizado, los intereses, el IVA cuando procede y el capital pendiente. Los datos se conservan en la copia de la práctica. Las cuotas antiguas recuperan el desglose de su contrato original; las comisiones anteriores conservan su importe sin asignarles un tratamiento fiscal desconocido.
+
+Referencias para los valores iniciales: [Ley del IVA, artículo 20.Uno.18](https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20) y [AEAT: porcentaje de retención en el Impuesto sobre Sociedades](https://sede.agenciatributaria.gob.es/Sede/impuesto-sobre-sociedades/retenciones-impuesto-sobre-sociedades/porcentaje-retencion-ingreso-cuenta.html). El ejercicio puede especificar un tratamiento distinto.

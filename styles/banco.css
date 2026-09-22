@@ -9,3 +9,19 @@
 
 .bank-extract-actions{display:flex;gap:8px;flex-wrap:wrap}.bank-extract-actions [data-slot=button]{min-height:42px;white-space:nowrap}
 @media(max-width:640px){.bank-extract-actions{width:100%}.bank-extract-actions [data-slot=button]{flex:1;justify-content:center}}
+
+.bank-receipt-meta dd small{display:block;margin-top:5px;color:#68725f}.bank-receipt-concept{font-size:14px;margin:0 0 22px;line-height:1.6;overflow-wrap:anywhere}
+.bank-receipt-breakdown{margin:24px 0;border:1px solid #dce4d6;border-radius:6px;padding:22px;background:#fff;color:#263e2c}
+.bank-receipt-breakdown h2{font-size:19px;font-weight:650;margin:0 0 20px}
+.bank-receipt-breakdown .bank-breakdown-meta{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:0 0 20px;font-size:13px}
+.bank-receipt-breakdown .bank-breakdown-meta dt{font-size:12px;color:#68725f;margin-bottom:4px}.bank-breakdown-meta dd{overflow-wrap:anywhere}
+.bank-receipt-breakdown .bank-breakdown-amounts,.bank-receipt-breakdown .bank-breakdown-capital{display:block;margin:0;font-size:14px}
+.bank-breakdown-amounts>div,.bank-breakdown-capital>div{display:flex;justify-content:space-between;gap:20px;padding:9px 0;border-bottom:1px solid #e6ebe2}
+.bank-breakdown-amounts dd,.bank-breakdown-capital dd{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.bank-breakdown-amounts .bank-breakdown-total{font-weight:650;border-top:2px solid #315a40;border-bottom:0;margin-top:5px;padding:12px 0}
+.bank-receipt-breakdown .bank-breakdown-capital{margin-top:18px;padding-top:10px;border-top:1px solid #dce4d6;font-size:13px}.bank-breakdown-capital>div{border:0;padding:5px 0}
+.bank-breakdown-note{font-size:12px;color:#68725f;line-height:1.6;margin:12px 0 0}
+@media(max-width:600px){.bank-receipt-breakdown{padding:16px}.bank-receipt-breakdown .bank-breakdown-meta{grid-template-columns:1fr}.bank-receipt-amount{flex-wrap:wrap}}
+@media print{.bank-receipt{padding:0;border:0}.bank-receipt-heading{padding-bottom:14px;margin-bottom:14px}.bank-receipt h1{font-size:24px;margin:8px 0 18px}.bank-receipt-meta{gap:12px;margin-bottom:18px;font-size:12px}.bank-receipt-meta dt{margin-bottom:3px}.bank-receipt-amount{padding:14px;margin-bottom:16px}.bank-receipt-concept{margin-bottom:14px;font-size:12px}.bank-receipt-breakdown{margin:14px 0;padding:16px;break-inside:avoid}.bank-receipt-breakdown h2{margin-bottom:12px;font-size:17px}.bank-receipt-breakdown .bank-breakdown-meta{gap:10px;font-size:11px;margin-bottom:12px}.bank-breakdown-meta dt{font-size:10px}.bank-receipt-breakdown .bank-breakdown-amounts{font-size:12px}.bank-breakdown-amounts>div{padding:6px 0}.bank-receipt-breakdown .bank-breakdown-capital{font-size:11px;margin-top:10px;padding-top:6px}.bank-breakdown-note{font-size:10px}.bank-receipt-balances{margin-top:12px;padding-top:8px}.bank-receipt-balances p{font-size:12px;padding:5px 0}.bank-receipt footer{margin-top:18px;padding-top:12px;font-size:10px}}
+
+@media print{@page bank-detail{size:A4 portrait;margin:14mm}.bank-receipt-detailed{page:bank-detail}}

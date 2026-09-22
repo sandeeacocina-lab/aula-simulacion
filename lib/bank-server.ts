@@ -2,14 +2,16 @@ import {companyId,companyProfile} from './company-server';
 import {env} from '@/lib/local/runtime';
 import {BankError,cents,normalizeIban,parseBankXml,validDate} from './bank-xml';
 import type {BankAccount,BankBatch,BankItem,BankMovement,BankParsed} from './bank-types';
+import {installmentBreakdown} from './bank-receipt-details';
+import type {FinanceData} from './bank-finance';
 const accountFields='id,name,iban,balance,revision,created_at AS createdAt';
-const batchFields='id,kind,filename,message_id AS messageId,format,count,total,delta,before,after,booking_date AS bookingDate,created_at AS createdAt,warnings,xml_key AS xmlKey,fingerprint,message_key AS messageKey';
+const batchFields='id,kind,filename,message_id AS messageId,format,count,total,delta,before,after,booking_date AS bookingDate,created_at AS createdAt,warnings,xml_key AS xmlKey,fingerprint,message_key AS messageKey,receipt_details AS receiptDetails';
 const movementFields='id,batch_id AS batchId,line,name,iban,amount,delta,balance,concept,reference,kind,requested_date AS requestedDate,booking_date AS bookingDate,created_at AS createdAt,mandate_id AS mandateId,mandate_date AS mandateDate,source_name AS sourceName,source_iban AS sourceIban';
-type BatchRow=Omit<BankBatch,'warnings'|'hasXml'>&{warnings:string;xmlKey:string;fingerprint:string;messageKey:string};
+type BatchRow=Omit<BankBatch,'warnings'|'hasXml'|'receiptDetails'>&{receiptDetails:string;warnings:string;xmlKey:string;fingerprint:string;messageKey:string};
 function db(){if(!env.DB)throw new BankError('La banca no está disponible temporalmente. Vuelve a intentarlo.',503);return env.DB;}
 function bucket(){if(!env.BUCKET)throw new BankError('No se puede conservar el fichero en este momento. Vuelve a intentarlo.',503);return env.BUCKET;}
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
-const cleanBatch=({xmlKey,warnings,fingerprint,messageKey,...b}:BatchRow):BankBatch=>({...b,warnings:JSON.parse(warnings),hasXml:!!xmlKey});
+const cleanBatch=({xmlKey,warnings,fingerprint,messageKey,receiptDetails,...b}:BatchRow):BankBatch=>({...b,warnings:JSON.parse(warnings),hasXml:!!xmlKey,receiptDetails:JSON.parse(receiptDetails)});
 const uuid=(v:unknown)=>{if(typeof v!=='string'||! /^[a-f\d]{8}-[a-f\d]{4}-4[a-f\d]{3}-[89ab][a-f\d]{3}-[a-f\d]{12}$/i.test(v))throw new BankError('Referencia de operación no válida.');return v;};
 function text(v:unknown,label:string,max=240,optional=false){if(v===undefined&&optional)return '';if(typeof v!=='string'||v.length>max||(!optional&&!v.trim())||/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(v))throw new BankError('Revisa '+label+'.');return v.trim();}
 async function sha(value:string){const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));return Array.from(new Uint8Array(h),x=>x.toString(16).padStart(2,'0')).join('');}
@@ -44,11 +46,17 @@ function itemInsert(id:string,items:BankItem[],before:number,positive:boolean,bo
  SELECT ?,?,json_extract(value,'$.line'),json_extract(value,'$.name'),json_extract(value,'$.iban'),json_extract(value,'$.amount'),json_extract(value,'$.delta'),json_extract(value,'$.balance'),json_extract(value,'$.concept'),json_extract(value,'$.reference'),json_extract(value,'$.kind'),json_extract(value,'$.requestedDate'),?,?,json_extract(value,'$.mandateId'),json_extract(value,'$.mandateDate'),json_extract(value,'$.sourceName'),json_extract(value,'$.sourceIban') FROM json_each(?) WHERE EXISTS(SELECT 1 FROM bank_batches WHERE id=? AND company_id=? AND fingerprint=? AND created_at=?) ON CONFLICT(batch_id,line) DO NOTHING`).bind(companyId(),id,bookingDate,createdAt,JSON.stringify(rows),id,companyId(),fingerprint,createdAt);
 }
 function batchInsert(b:BankBatch,hash:string,key:string,xmlKey:string,revision:number){
- return db().prepare(`INSERT INTO bank_batches (id,company_id,kind,fingerprint,message_key,filename,message_id,format,count,total,delta,before,after,booking_date,created_at,warnings,xml_key)
- SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? FROM bank_accounts WHERE id=? AND revision=? AND balance=? AND balance+?>=0 AND balance+?<=1000000000000`)
- .bind(b.id,companyId(),b.kind,hash,key,b.filename,b.messageId,b.format,b.count,b.total,b.delta,b.before,b.after,b.bookingDate,b.createdAt,JSON.stringify(b.warnings),xmlKey,companyId(),revision,b.before,b.delta,b.delta);
+ return db().prepare(`INSERT INTO bank_batches (id,company_id,kind,fingerprint,message_key,filename,message_id,format,count,total,delta,before,after,booking_date,created_at,warnings,xml_key,receipt_details)
+ SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? FROM bank_accounts WHERE id=? AND revision=? AND balance=? AND balance+?>=0 AND balance+?<=1000000000000`)
+ .bind(b.id,companyId(),b.kind,hash,key,b.filename,b.messageId,b.format,b.count,b.total,b.delta,b.before,b.after,b.bookingDate,b.createdAt,JSON.stringify(b.warnings),xmlKey,JSON.stringify(b.receiptDetails??null),companyId(),revision,b.before,b.delta,b.delta);
 }
-async function details(id:string){const row=await batch(id);if(!row)throw new BankError('No se encuentra la remesa.',404);const items=await db().prepare(`SELECT ${movementFields} FROM bank_movements WHERE batch_id=? ORDER BY line`).bind(id).all<BankMovement>();return {batch:cleanBatch(row),items:items.results};}
+async function details(id:string){const row=await batch(id);if(!row)throw new BankError('No se encuentra la remesa.',404);const items=await db().prepare(`SELECT ${movementFields} FROM bank_movements WHERE batch_id=? ORDER BY line`).bind(id).all<BankMovement>();const result=cleanBatch(row);
+ // Historical installments retain their original amounts; recover only from the linked contract.
+ if(!result.receiptDetails&&['loan_payment','lease_payment'].includes(result.kind)){
+  const linked=await db().prepare('SELECT p.id,p.data,pp.installment FROM bank_product_payments pp JOIN bank_products p ON p.id=pp.product_id WHERE pp.batch_id=? AND p.company_id=?').bind(id,companyId()).first<{id:string;data:string;installment:number}>();
+  if(linked){const plan=JSON.parse(linked.data) as FinanceData,s=plan.schedule.find(s=>s.number===linked.installment);if(s&&s.total===result.total&&result.delta===-s.total)result.receiptDetails={version:1,holder:{name:items.results[0]?.sourceName||'',nif:'',iban:items.results[0]?.sourceIban||''},breakdown:installmentBreakdown(linked.id,plan,s)};}
+ }
+ return {batch:result,items:items.results};}
 function filter(url:URL){
  const from=url.searchParams.get('from')||'',to=url.searchParams.get('to')||'',q=(url.searchParams.get('q')||'').trim().slice(0,120).replace(/[\\%_]/g,'\\$&');
  if(from)validDate(from);if(to)validDate(to);if(from&&to&&from>to)throw new BankError('La fecha de inicio debe ser anterior a la fecha final.');

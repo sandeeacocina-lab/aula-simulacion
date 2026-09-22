@@ -86,6 +86,7 @@ export async function readDatabase(id=storageWorkspaceId()){
   // "no captured signature"; never invent one for historical messages.
   if(!db.exec('PRAGMA table_info(mail_messages)')[0].values.some(row=>row[1]==='corporate_signature'))db.run("ALTER TABLE mail_messages ADD corporate_signature TEXT NOT NULL DEFAULT 'null'");
   db.run(documentationSchema);
+  if(!db.exec('PRAGMA table_info(bank_batches)')[0].values.some(row=>row[1]==='receipt_details'))db.run("ALTER TABLE bank_batches ADD receipt_details TEXT NOT NULL DEFAULT 'null'");
   db.run('PRAGMA foreign_keys=ON');return db;
  }catch(error){db.close();throw error;}
 }
