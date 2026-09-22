@@ -1,6 +1,6 @@
 # Aula de simulación empresarial
 
-Una oficina de prácticas para Formación Profesional: Agencia Tributaria, SEPE, Seguridad Social, banca y correo. Acceso libre desde el navegador. Elige ARREA, DECASARRE o crea otra empresa, cada una con su propia práctica local.
+Una oficina de prácticas para Formación Profesional: Agencia Tributaria, SEPE, Seguridad Social, banca, correo y documentación. Acceso libre desde el navegador. Elige ARREA, DECASARRE o crea otra empresa, cada una con su propia práctica local.
 
 **Autoría y dirección pedagógica: Sandra Mangas. Desarrollo con asistencia de inteligencia artificial.**
 
@@ -14,7 +14,7 @@ Simulación educativa. No presenta documentos ante organismos públicos, no real
 4. Al terminar, pulsa **Descargar copia de la práctica**. El archivo permite continuar en otro dispositivo mediante **Importar una práctica**.
 5. Para un nuevo encargo, reinicia un módulo o todos los registros de esa empresa desde **Mi práctica**. Las otras empresas se conservan.
 
-El profesorado puede preparar un supuesto, descargar su copia y compartirla con el grupo. Cada estudiante importa el mismo punto de partida y trabaja en su propio navegador.
+El profesorado puede preparar un supuesto, descargar su copia y compartirla con el grupo. En **Bandeja de documentación**, usa **Preparar un encargo**, añade las instrucciones y los archivos, y descarga la copia desde **Mi práctica**. Cada estudiante importa el mismo punto de partida y trabaja en su propio navegador; los cambios no se sincronizan entre equipos. La copia incluye documentos, clasificaciones, estados y notas. Importarla sustituye la práctica activa, por lo que conviene usar una empresa nueva si ya hay trabajo que conservar.
 
 **Cambiar empresa** vuelve al selector sin borrar nada. Si utilizabas la versión anterior, encontrarás sus datos bajo **Práctica anterior**. No se copian registros de la Central de Simulación: las dos empresas iniciales comienzan vacías. Cada pestaña recuerda su selección; al cambiar se recarga la aplicación para mantener separado todo el estado de los módulos.
 
@@ -22,6 +22,7 @@ El profesorado puede preparar un supuesto, descargar su copia y compartirla con 
 
 | Módulo | Funciones |
 | --- | --- |
+| Documentación | Encargos con instrucciones y archivos mezclados; clasificación, estados, notas, vista previa y descarga. Hasta 50 documentos por encargo y 8 MB por archivo. |
 | Agencia Tributaria | Modelos 303, 111, 115, 190, 347 y 349; borradores, validación didáctica, presentación, justificantes PDF y borrado. Importación del PDF educativo de NominaSOL para el 190. |
 | SEPE | Comunicación inicial de contratos desde XML; revisión, observaciones sobre NIF y CCC, detección de duplicados, historial y PDF. Enlace al catálogo oficial de modelos. |
 | Seguridad Social | Inscripción de empresas, afiliación y altas laborales; importación de RNT y RLC/DLC educativos, comprobación de coherencia, justificantes y borrado. |
@@ -37,7 +38,7 @@ Los pagos manuales de impuestos o cotizaciones en la banca sirven para practicar
 - No hay base de datos remota, llamadas a inteligencia artificial ni almacenamiento de documentos en un servidor.
 - El correo es un ejercicio local: no comunica ordenadores distintos y no envía a las direcciones indicadas.
 - Los XML de contratos y remesas se procesan sin conservar el original. Se conservan los datos del registro y su referencia.
-- Los PDF de cotización y los adjuntos del correo se guardan localmente hasta borrarlos. La copia completa incluye estos archivos.
+- Los documentos de los encargos, los PDF de cotización y los adjuntos del correo se guardan localmente hasta borrarlos. La copia completa incluye estos archivos.
 - Borrar datos del navegador, usar una ventana privada o cambiar de equipo puede hacer que la práctica deje de estar disponible. Guarda tu copia descargada.
 - Las copias admiten hasta 80 MB por archivo y 60 MB de adjuntos. La exportación incluye solo la empresa activa y la importación la sustituye tras una confirmación, sin afectar a otras empresas. Se aceptan también las copias de la versión anterior, con estructura y adjuntos comprobados.
 - La lectura de PDF admite la distribución de los documentos educativos de NominaSOL utilizada como referencia. Un PDF escaneado o un diseño diferente puede no reconocerse. No incorpora OCR ni validación administrativa oficial completa.
@@ -74,7 +75,7 @@ Los registros utilizan SQLite/WebAssembly mediante sql.js, persistido en una bas
 
 La copia de prácticas exporta tablas y archivos, no código SQL ejecutable. Al restaurar se reconstruye una base nueva con el esquema conocido y se verifican columnas, tipos, referencias y adjuntos antes de sustituir la práctica.
 
-Las pruebas cubren operaciones bancarias, concurrencia y saldos, contratos, registro laboral, extracción de PDF, correo y adjuntos, copias, aislamiento de módulos y recorridos de formularios.
+Las pruebas cubren operaciones bancarias, concurrencia y saldos, contratos, registro laboral, extracción de PDF, correo y adjuntos, encargos y clasificación de documentos, copias antiguas y actuales, aislamiento de módulos y recorridos de formularios.
 
 ## Componentes y referencias
 

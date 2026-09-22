@@ -1,1 +1,0 @@
-import{tt as e}from"./index-CtvQJADs.js";var t=()=>`demo`,n=e;export{n,t};

@@ -13,6 +13,7 @@ export async function localRequest(url:string,init?:RequestInit):Promise<Respons
    case '/api/correo':{const m=await import('../mail-server');return write?m.writeMail(request):m.listMail(request);}
    case '/api/correo/adjuntos':return (await import('../mail-server')).downloadMailAttachment(request);
    case '/api/correo/exportar':return (await import('../mail-server')).exportMail(request);
+   case '/api/documentacion':{const m=await import('../documentation-server');return write?m.writeDocumentation(request):m.readDocumentation(request);}
    case '/api/practicas':return (await import('../practice-server')).managePractice(request);
    default:return Response.json({error:'Este servicio no existe en el aula.'},{status:404});
   }

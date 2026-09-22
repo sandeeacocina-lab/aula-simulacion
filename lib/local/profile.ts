@@ -3,7 +3,7 @@ export const DEFAULT_PROFILE={id:'demo',name:'Empresa de prácticas, S.L.',legal
 export type Profile=typeof DEFAULT_PROFILE;
 // Profiles only: no records or browser state are copied from the live central.
 export const BUILTIN_PROFILES:Record<'arrea'|'decasarre',Profile>={
- arrea:{id:'demo',name:'ARREA Eventos',legalName:'ARREA Eventos',shortName:'ARREA',nif:'B47425400',ccc:'47801073570',iban:'ES4631806012310417965868',mailbox:'info@arrea.test',website:'https://sandeeacocina-lab.github.io/Arrea/',domain:'arreaeventos.es',activity:'Organización de eventos empresariales',logo:'./arrea-logo.png',accent:'#a90045'},
+ arrea:{id:'demo',name:'ARREA Eventos',legalName:'ARREA Eventos',shortName:'ARREA',nif:'B47425400',ccc:'47801073570',iban:'ES4631806012310417965868',mailbox:'info@arrea.test',website:'https://sandeeacocina-lab.github.io/Arrea/',domain:'arreaeventos.es',activity:'Organización de eventos empresariales',logo:'./arrea-logo-negro.svg',accent:'#a90045'},
  decasarre:{id:'demo',name:'DECASARRE',legalName:'DECASARRE, S.A.S.',shortName:'DECASARRE',nif:'A47135363',ccc:'47162967053',iban:'ES4631806012310417965868',mailbox:'info@decasarre.test',website:'https://decasarre.es',domain:'decasarre.es',activity:'Comercialización de vinos y quesos',logo:'./decasarre-logo.png',accent:'#555a25'},
 };
 export function defaultProfile(id=storageWorkspaceId()):Profile{return {...(id==='arrea'||id==='decasarre'?BUILTIN_PROFILES[id]:DEFAULT_PROFILE)};}
@@ -17,8 +17,8 @@ export function validateProfile(value:unknown):Profile{
  if(!/^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$/.test(domain)||!/^#[a-f0-9]{6}$/.test(accent))throw Error('Revisa el dominio y el color de la empresa.');
  const safeUrl=(value:string,httpsOnly=false)=>{try{const url=new URL(value);return (httpsOnly?url.protocol==='https:':['https:','http:'].includes(url.protocol))&&!url.username&&!url.password;}catch{return false;}};
  if(website&&!safeUrl(website))throw Error('La web debe ser una dirección http o https sin credenciales.');
- if(!['./empresa.svg','./arrea-logo.png','./decasarre-logo.png'].includes(logo)&&!safeUrl(logo,true))throw Error('El logotipo debe ser un recurso del aula o una imagen https.');
- return {...DEFAULT_PROFILE,name,legalName,shortName,nif,ccc,iban,mailbox,activity,domain,website,logo,accent};
+ if(!['./empresa.svg','./arrea-logo.png','./arrea-logo-negro.svg','./decasarre-logo.png'].includes(logo)&&!safeUrl(logo,true))throw Error('El logotipo debe ser un recurso del aula o una imagen https.');
+ return {...DEFAULT_PROFILE,name,legalName,shortName,nif,ccc,iban,mailbox,activity,domain,website,logo:logo==='./arrea-logo.png'?'./arrea-logo-negro.svg':logo,accent};
 }
 export function getProfile(id=storageWorkspaceId()):Profile{try{const raw=workspaceStorage(id).getItem('profile');return raw?validateProfile(JSON.parse(raw)):defaultProfile(id);}catch{return defaultProfile(id);}}
 export function saveProfile(profile:unknown,id=storageWorkspaceId()){const p=validateProfile(profile);workspaceStorage(id).setItem('profile',JSON.stringify(p));return p;}

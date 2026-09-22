@@ -16,8 +16,8 @@ window.scrollTo=vi.fn();HTMLElement.prototype.scrollIntoView=vi.fn();
 beforeAll(async()=>{setEngineForTests(await initSqlJs());});
 beforeEach(async()=>{localStorage.clear();const db=await freshDatabase();await persistDatabase(db.export(),{replaceFiles:true});db.close();});
 afterEach(cleanup);
-it('ofrece cinco accesos independientes y una ruta para cambiar de empresa',()=>{
- render(<CompanyHome/>);const services=screen.getByRole('region',{name:'Servicios disponibles'});expect(within(services).getAllByRole('link')).toHaveLength(5);expect(screen.getByRole('link',{name:'Cambiar empresa'}).getAttribute('href')).toBe('#/');
+it('ofrece seis accesos independientes y una ruta para cambiar de empresa',()=>{
+ render(<CompanyHome/>);const services=screen.getByRole('region',{name:'Servicios disponibles'});expect(within(services).getAllByRole('link')).toHaveLength(6);expect(screen.getByRole('link',{name:'Cambiar empresa'}).getAttribute('href')).toBe('#/');
 });
 it('muestra las dos empresas y permite preparar una nueva sin flechas de navegación',()=>{
  render(<Home/>);expect(screen.getByRole('button',{name:'Entrar en ARREA Eventos'})).toBeTruthy();expect(screen.getByRole('button',{name:'Entrar en DECASARRE'})).toBeTruthy();

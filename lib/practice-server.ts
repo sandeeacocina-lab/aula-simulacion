@@ -1,14 +1,14 @@
 import {companyId,companyProfile} from './company-server';
 import {env} from '@/lib/local/runtime';
-type Scope='sepe'|'social'|'registry'|'bank'|'mail'|'mandate'|'all';
+type Scope='sepe'|'social'|'registry'|'bank'|'mail'|'mandate'|'documentation'|'document'|'all';
 class PracticeError extends Error{constructor(message:string,public status=400){super(message);}}
 const json=(d:unknown,status=200)=>Response.json(d,{status,headers:{'Cache-Control':'no-store'}});
 const db=()=>{if(!env.DB)throw new PracticeError('No se puede consultar la central.',503);return env.DB;};
-const scopes:Scope[]=['sepe','social','registry','bank','mail','mandate','all'];
+const scopes:Scope[]=['sepe','social','registry','bank','mail','mandate','documentation','document','all'];
 const tableStamp=(table:string,expression='id')=>`(SELECT COALESCE(json_group_array(v),'[]') FROM (SELECT ${expression} AS v FROM ${table} WHERE ${table==='bank_accounts'?`id='${companyId()}'`:`company_id='${companyId()}'`} ORDER BY id))`;
 function stampSQL(scope:Scope){
- const parts:Record<string,string[]>={sepe:[tableStamp('sepe_batches',"id||created_at||fingerprint")],social:[tableStamp('social_batches',"id||created_at||fingerprint")],registry:[tableStamp('social_registry',"id||created_at||fingerprint")],bank:[tableStamp('bank_accounts',"id||created_at||revision"),tableStamp('bank_batches',"id||created_at||fingerprint"),tableStamp('bank_products'),tableStamp('bank_mandates',"id||revision")],mail:[tableStamp('mail_messages',"id||revision")]};
- return 'SELECT '+(scope==='all'?Object.values(parts).flat():parts[scope==='mandate'?'bank':scope]).join("||'|'||")+' AS stamp';
+ const parts:Record<string,string[]>={sepe:[tableStamp('sepe_batches',"id||created_at||fingerprint")],social:[tableStamp('social_batches',"id||created_at||fingerprint")],registry:[tableStamp('social_registry',"id||created_at||fingerprint")],bank:[tableStamp('bank_accounts',"id||created_at||revision"),tableStamp('bank_batches',"id||created_at||fingerprint"),tableStamp('bank_products'),tableStamp('bank_mandates',"id||revision")],mail:[tableStamp('mail_messages',"id||revision")],documentation:[tableStamp('documentation_assignments',"id||revision"),tableStamp('documentation_files',"id||revision")]};
+ return 'SELECT '+(scope==='all'?Object.values(parts).flat():parts[scope==='mandate'?'bank':scope==='document'?'documentation':scope]).join("||'|'||")+' AS stamp';
 }
 async function sha(s:string){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))),v=>v.toString(16).padStart(2,'0')).join('');}
 const idsWhere=()=>`company_id='${companyId()}' AND id IN (SELECT value FROM json_each(?))`;
@@ -22,6 +22,17 @@ async function plan(scope:Scope,id?:string){
  if(has('social')){const r=socialRows,ids=r.map(x=>x.id);counts['Presentaciones de cotización']=r.length;const docs=await db().prepare(`SELECT pdf_key FROM social_documents WHERE company_id='${companyId()}' AND batch_id IN (SELECT value FROM json_each(?))`).bind(JSON.stringify(ids)).all<{pdf_key:string}>();files.push(...docs.results.map(x=>x.pdf_key));statements.push(db().prepare(`DELETE FROM social_documents WHERE company_id='${companyId()}' AND batch_id IN (SELECT value FROM json_each(?))`).bind(JSON.stringify(ids)));remove('social_batches',ids);}
  if(has('registry')){let r=await rows('social_registry',id);if(id&&r.length){const related=await db().prepare(`SELECT * FROM social_registry WHERE company_id='${companyId()}' AND kind='employment' AND (json_extract(data,'$.companyId')=? OR json_extract(data,'$.personId')=?)`).bind(id,id).all<Record<string,any>>();if(related.results.length){notes.push('También se borrarán las altas laborales vinculadas a esta empresa o persona.');r=[...r,...related.results];}}counts['Inscripciones, afiliaciones y altas']=r.length;remove('social_registry',r.map(x=>x.id));}
  if(has('mail')){const r=await rows('mail_messages',id);counts['Mensajes de correo']=r.length;for(const m of r)for(const a of JSON.parse(m.attachments))if(a.key)files.push(a.key);remove('mail_messages',r.map(x=>x.id));}
+ if(has('documentation')){
+  const assignments=await rows('documentation_assignments',id),ids=assignments.map(row=>row.id);
+  const documents=(await db().prepare('SELECT * FROM documentation_files WHERE assignment_id IN (SELECT value FROM json_each(?))').bind(JSON.stringify(ids)).all<{id:string;file_key:string}>()).results;
+  counts['Encargos']=assignments.length;counts['Documentos de encargos']=documents.length;
+  files.push(...documents.map(row=>row.file_key));remove('documentation_files',documents.map(row=>row.id));remove('documentation_assignments',ids);
+ }
+ if(scope==='document'){
+  const documents=await rows('documentation_files',id);counts['Documentos']=documents.length;files.push(...documents.map(row=>row.file_key));
+  statements.push(db().prepare('UPDATE documentation_assignments SET revision=revision+1 WHERE id IN (SELECT value FROM json_each(?))').bind(JSON.stringify(documents.map(row=>row.assignment_id))));
+  remove('documentation_files',documents.map(row=>row.id));
+ }
  if(scope==='mandate'){const r=await rows('bank_mandates',id);counts['Domiciliaciones']=r.length;remove('bank_mandates',r.map(x=>x.id));notes.push('Los cargos o cobros ya contabilizados se conservarán.');}
  if(has('bank')){
   const allBatches=await rows('bank_batches'),allProducts=await rows('bank_products');let target=allBatches.filter(x=>!id||x.id===id);let products=allProducts.filter(x=>!id||x.id===id);

@@ -7,7 +7,7 @@ const logos={arrea:{...arreaMailLogo,id:'arrea'},decasarre:{...decasarreMailLogo
 export type EmbeddedMailLogo=typeof logos[keyof typeof logos];
 // Exports use only bundled images, never download a remote company logo.
 export function profileMailLogo(profile:{logo:string}):EmbeddedMailLogo|null{
- if(profile.logo==='./arrea-logo.png')return logos.arrea;
+ if(['./arrea-logo.png','./arrea-logo-negro.svg'].includes(profile.logo))return logos.arrea;
  if(profile.logo==='./decasarre-logo.png')return logos.decasarre;
  if(profile.logo==='./empresa.svg')return logos.empresa;
  return null;

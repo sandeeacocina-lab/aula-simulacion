@@ -50,6 +50,7 @@ export default function Home(){
 }
 
 const services=[
+ {id:'documentation',path:'/servicios/documentacion',kind:'DOCUMENTOS DE TRABAJO',title:'Bandeja de documentación',description:'Abre los encargos, revisa los documentos y organiza el trabajo de tu empresa.',action:'Abrir la bandeja',image:<><FolderOpen size={43}/><div><strong>Documentación</strong><small>ENCARGOS Y ARCHIVO</small></div></>},
  {id:'tax',path:'/servicios/agencia-tributaria',kind:'SEDE ELECTRÓNICA',title:'Agencia Tributaria',description:'Presenta autoliquidaciones y declaraciones informativas. Consulta y descarga tus justificantes.',action:'Acceder a la sede',image:<img src="./aeat.svg" alt="Agencia Tributaria"/>},
  {id:'social',path:'/servicios/seguridad-social',kind:'SEDE ELECTRÓNICA',title:'Seguridad Social',description:'Inscribe empresas, afilia trabajadores y presenta documentos de cotización RNT y RLC.',action:'Acceder a la sede',image:<img src="./seguridad-social.svg" alt="Seguridad Social"/>},
  {id:'sepe',path:'/servicios/sepe',kind:'CONTRATACIÓN',title:'SEPE · Contrat@',description:'Comunica contratos mediante XML, consulta las comunicaciones y accede a los modelos oficiales.',action:'Acceder a la sede',image:<img src="./sepe/sepe-logo.png" alt="Servicio Público de Empleo Estatal"/>},

@@ -13,3 +13,16 @@
 .workspace-header .workspace-brand-logo[src*="arrea-logo"]{width:124px;height:auto;max-height:none;flex-shrink:0}
 .workspace-card-image:has(img[src*="arrea-logo"]){padding:14px}
 .workspace-card-image img[src*="arrea-logo"]{width:140px;height:auto;max-height:none}
+
+/* The inverse official asset is displayed against its black background. */
+img[src*="arrea-logo-negro.svg"]{background:#15120f;border-radius:4px}
+.workspace-card-image:has(img[src*="arrea-logo-negro.svg"]){background:#15120f}
+.company-office .aula-service.documentation .aula-service-image{background:#edf3f8;color:#334e72;gap:16px}
+.aula-service.documentation .aula-service-image strong{display:block;font-size:23px;font-weight:700}
+.aula-service.documentation .aula-service-image small{display:block;font-size:9px;letter-spacing:.13em;margin-top:8px}
+.company-office .aula-service-content [data-slot=button][data-variant=outline]{background:#126d79;color:#fff;border:1px solid #126d79}
+.company-office .aula-service-content [data-slot=button][data-variant=outline]:hover{background:#0c5360}
+
+.company-office .aula-service.documentation{grid-column:1/-1;flex-direction:row}
+.company-office .aula-service.documentation .aula-service-image{width:38%;height:auto;min-height:184px;flex-shrink:0;border:0}
+@media(max-width:760px){.company-office .aula-service.documentation{flex-direction:column}.company-office .aula-service.documentation .aula-service-image{width:100%;height:116px;min-height:116px}}

@@ -12,6 +12,8 @@ import './styles/aula.css';
 import './styles/brand.css';
 import './styles/responsive.css';
 import './styles/workspaces.css';
+import './styles/documentation.css';
+const Documentation=lazy(()=>import('./components/documentation/documentation-workspace'));
 const Settings=lazy(()=>import('./components/settings'));
 const Bank=lazy(()=>import('./components/bank/bank-workspace'));
 const BankReceipt=lazy(()=>import('./components/bank/receipt'));
@@ -25,7 +27,7 @@ const Contributions=lazy(()=>import('./components/social/social-workspace'));
 const SocialReceipt=lazy(()=>import('./components/social/receipt'));
 const Registry=lazy(()=>import('./components/social/registry-form'));
 const RegistryHistory=lazy(()=>import('./components/social/registry-history'));
-const routes:Record<string,ReactNode>={'/':<Home/>,'/servicios':<CompanyHome/>,'/practicas':<Settings/>,'/servicios/banco':<Bank/>,'/servicios/banco/justificante':<BankReceipt/>,'/servicios/banco/financiacion':<FinanceReceipt/>,'/servicios/correo':<Mail/>,'/servicios/agencia-tributaria':<div className="tax-app"><Tax/></div>,'/servicios/sepe':<Sepe/>,'/servicios/sepe/justificante':<SepeReceipt/>,'/servicios/seguridad-social':<Social/>,'/servicios/seguridad-social/cotizacion':<Contributions/>,'/servicios/seguridad-social/justificante':<SocialReceipt/>,'/servicios/seguridad-social/registros':<RegistryHistory/>,'/servicios/seguridad-social/empresas':<Registry kind="company"/>,'/servicios/seguridad-social/afiliacion':<Registry kind="person"/>,'/servicios/seguridad-social/altas':<Registry kind="employment"/>};
+const routes:Record<string,ReactNode>={'/':<Home/>,'/servicios':<CompanyHome/>,'/practicas':<Settings/>,'/servicios/documentacion':<Documentation/>,'/servicios/banco':<Bank/>,'/servicios/banco/justificante':<BankReceipt/>,'/servicios/banco/financiacion':<FinanceReceipt/>,'/servicios/correo':<Mail/>,'/servicios/agencia-tributaria':<div className="tax-app"><Tax/></div>,'/servicios/sepe':<Sepe/>,'/servicios/sepe/justificante':<SepeReceipt/>,'/servicios/seguridad-social':<Social/>,'/servicios/seguridad-social/cotizacion':<Contributions/>,'/servicios/seguridad-social/justificante':<SocialReceipt/>,'/servicios/seguridad-social/registros':<RegistryHistory/>,'/servicios/seguridad-social/empresas':<Registry kind="company"/>,'/servicios/seguridad-social/afiliacion':<Registry kind="person"/>,'/servicios/seguridad-social/altas':<Registry kind="employment"/>};
 class Boundary extends Component<{children:ReactNode},{error:boolean}>{state={error:false};static getDerivedStateFromError(){return {error:true};}render(){return this.state.error?<main className="aula-main"><h1>No se ha podido abrir esta pantalla.</h1><p>Recarga la página para volver a intentarlo. Los registros guardados se conservan.</p><a href="./">Volver al inicio</a></main>:this.props.children;}}
 function DownloadPage({url}:{url:string}){
  const [error,setError]=useState(''),[ready,setReady]=useState(false),[preview,setPreview]=useState('');
