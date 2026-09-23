@@ -1,4 +1,5 @@
-import {beforeAll,beforeEach,describe,expect,it} from 'vitest';
+import {newMailId} from '../lib/mail-types';
+import {beforeAll,beforeEach,describe,expect,it,vi} from 'vitest';
 import {indexedDB} from 'fake-indexeddb';
 import initSqlJs from 'sql.js';
 function browserStorage(){const data:Record<string,any>={};Object.defineProperties(data,{getItem:{value:(key:string)=>data[key]??null},setItem:{value:(key:string,value:string)=>{data[key]=String(value);}},removeItem:{value:(key:string)=>{delete data[key];}}});return data;}
@@ -9,11 +10,20 @@ const {selectWorkspace}=await import('../lib/local/workspaces');
 const {createBackup,restoreBackup}=await import('../lib/local/backup');
 async function post(data:Record<string,unknown>,expected=200){const response=await localRequest('/api/documentacion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),result=await response.json();expect(response.status,JSON.stringify(result)).toBe(expected);return result;}
 async function state(){return (await localRequest('/api/documentacion')).json();}
-async function create(files=[new File(['Factura de prueba'],'factura.txt',{type:'text/plain'}),new File(['Pedido de prueba'],'pedido.xml',{type:'application/xml'})]){const id=crypto.randomUUID(),form=new FormData();form.set('assignment',JSON.stringify({action:'create',id,title:'Operaciones del trimestre',period:'1T 2026',instructions:'Clasifica los documentos y prepara los trámites.'}));for(const file of files)form.append('files',file);const response=await localRequest('/api/documentacion',{method:'POST',body:form});expect(response.status,await response.text()).toBe(201);return id;}
+async function create(files=[new File(['Factura de prueba'],'factura.txt',{type:'text/plain'}),new File(['Pedido de prueba'],'pedido.xml',{type:'application/xml'})]){const id=newMailId(),form=new FormData();form.set('assignment',JSON.stringify({action:'create',id,title:'Operaciones del trimestre',period:'1T 2026',instructions:'Clasifica los documentos y prepara los trámites.'}));for(const file of files)form.append('files',file);const response=await localRequest('/api/documentacion',{method:'POST',body:form});expect(response.status,await response.text()).toBe(201);return id;}
 async function erase(scope:string,id?:string){const body={scope,...(id?{id}:{})},request=async(data:unknown)=>localRequest('/api/practicas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const preview=await request({...body,action:'preview'});expect(preview.status).toBe(200);const result=await request({...body,action:'delete',token:(await preview.json()).token,confirm:'BORRAR'});expect(result.status,await result.text()).toBe(200);}
 beforeAll(async()=>setEngineForTests(await initSqlJs()));
 beforeEach(async()=>{selectWorkspace('arrea');const db=await freshDatabase();try{for(const id of ['arrea','decasarre'])await persistDatabase(db.export(),{replaceFiles:true},id);}finally{db.close();}for(const key of Object.keys(localStorage))localStorage.removeItem(key);});
 describe('Bandeja de documentación',()=>{
+ it('prepara una práctica con 16 archivos sin randomUUID, como en HTTP',async()=>{
+  const original=globalThis.crypto;
+  vi.stubGlobal('crypto',{getRandomValues:original.getRandomValues.bind(original)});
+  try{
+   const id=await create(Array.from({length:16},(_,i)=>new File(['Documento '+i],'documento-'+i+'.txt',{type:'text/plain'})));
+   const saved=await state();expect(saved.assignments[0]).toMatchObject({id,total:16});expect(await allFiles()).toHaveProperty('size',16);
+   const file=saved.documents[0];const download=await localRequest('/api/documentacion?file='+file.id);expect(download.status).toBe(200);expect(await download.text()).toMatch(/^Documento /);
+  }finally{vi.unstubAllGlobals();}
+ });
  it('conserva archivos y clasificaciones al recargar y los aísla por empresa',async()=>{
   const id=await create(),initial=await state();expect(initial.assignments[0]).toMatchObject({id,total:2,completed:0});expect(initial.documents.every((file:any)=>file.category==='sin-clasificar'&&file.status==='pendiente')).toBe(true);
   const document=initial.documents.find((file:any)=>file.name==='factura.txt');await post({action:'classify',id:document.id,revision:1,category:'compra',status:'completado',notes:'Factura contabilizada.'});

@@ -26,7 +26,7 @@ El profesorado puede preparar un supuesto, descargar su copia y compartirla con 
 | Agencia Tributaria | Modelos 303, 111, 115, 190, 347 y 349; borradores, validación didáctica, presentación, justificantes PDF y borrado. Importación del PDF educativo de NominaSOL para el 190. |
 | SEPE | Comunicación inicial de contratos desde XML; revisión, observaciones sobre NIF y CCC, detección de duplicados, historial y PDF. Enlace al catálogo oficial de modelos. |
 | Seguridad Social | Inscripción de empresas, afiliación y altas laborales; importación de RNT y RLC/DLC educativos, comprobación de coherencia, justificantes y borrado. |
-| Banca Nexo | Cuenta, saldo inicial, transferencias, cobros, nóminas, efectivo, gastos y pagos manuales; mandatos, préstamos, leasing y cuotas; remesas SEPA XML y extractos CSV y PDF con los filtros de la consulta. Movimientos por fecha ascendente. Justificantes imprimibles con capital amortizado, intereses y capital pendiente; comisiones exentas o con IVA; abonos de intereses con retención y neto en cuenta. |
+| Banca Nexo | Cuenta, saldo inicial, transferencias, cobros, nóminas, efectivo, gastos y pagos manuales; mandatos, préstamos, leasing y cuotas; remesas SEPA XML y extractos CSV y PDF con los filtros de la consulta. Importación de Excel con vista previa, selección de hoja y detección de duplicados (hasta 500 movimientos). Movimientos por fecha ascendente. Justificantes imprimibles con capital amortizado, intereses y capital pendiente; comisiones exentas o con IVA; abonos de intereses con retención y neto en cuenta. |
 | Correo | Recepción simulada, borradores, respuestas, firma personalizable, adjuntos, leído/no leído, archivo y papelera; exportación PDF y EML con adjuntos. |
 
 Los pagos manuales de impuestos o cotizaciones en la banca sirven para practicar una operación bancaria: **no se vinculan a las declaraciones de los demás módulos**.
@@ -90,3 +90,21 @@ En **Operaciones manuales**, la comisión permite elegir **Exenta de IVA** o **S
 Las cuotas de préstamos y leasing identifican el contrato, el vencimiento, el TIN, el capital amortizado, los intereses, el IVA cuando procede y el capital pendiente. Los datos se conservan en la copia de la práctica. Las cuotas antiguas recuperan el desglose de su contrato original; las comisiones anteriores conservan su importe sin asignarles un tratamiento fiscal desconocido.
 
 Referencias para los valores iniciales: [Ley del IVA, artículo 20.Uno.18](https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20) y [AEAT: porcentaje de retención en el Impuesto sobre Sociedades](https://sede.agenciatributaria.gob.es/Sede/impuesto-sobre-sociedades/retenciones-impuesto-sobre-sociedades/porcentaje-retencion-ingreso-cuenta.html). El ejercicio puede especificar un tratamiento distinto.
+
+### Movimientos bancarios desde Excel
+
+En **Banca Nexo → Importar Excel**, descarga la plantilla y prepara una hoja con **Fecha, Concepto e Importe** (positivo para ingresos y negativo para gastos). También se admiten columnas separadas **Entrada** y **Salida**. **Empresa, Referencia e IBAN** son opcionales. La columna Empresa identifica a la contraparte; todos los movimientos se incorporan a la cuenta de la práctica activa.
+
+Selecciona un archivo `.xlsx` de hasta 5 MB y 500 movimientos. Si tiene varias hojas visibles, elige la que quieres incorporar. Revisa la vista previa, los importes y el saldo resultante antes de confirmar. Las coincidencias con la cuenta o con otra fila del archivo se omiten, salvo que marques que son operaciones distintas. Los errores de datos y los saldos insuficientes impiden registrar el lote completo. Las fórmulas en los datos del movimiento deben pegarse como valores antes de importar. Las columnas auxiliares, como Saldo, se ignoran aunque contengan fórmulas. La columna Cuenta del extracto identifica la cuenta propia y no se interpreta como el IBAN de la contraparte.
+
+La importación añade movimientos a la cuenta, conserva las fechas del Excel y genera un justificante del lote. Se guarda localmente e incluye los nuevos movimientos en **Descargar copia de la práctica**, para poder compartir el supuesto con el alumnado. No requiere conexión con un servidor ni cambia las otras empresas.
+
+El dominio personalizado se conserva en `public/CNAME`, que se copia a `docs/CNAME` en cada construcción.
+
+### Correos y PDF de varias liquidaciones
+
+**Recibir un mensaje de prácticas** abre un correo personalizado en blanco. Permite elegir libremente remitente, dirección, asunto, mensaje, firma y adjuntos. Las plantillas opcionales de DECASARRE corresponden a vinos y quesos; ARREA mantiene las de eventos empresariales. Las empresas creadas por el docente disponen de plantillas genéricas.
+
+La importación de RNT y RLC admite varios CCC o periodos en los PDF de NominaSOL. Al aportar ambos archivos se comprueba que sus liquidaciones correspondan. Selecciona cada CCC y revisa sus datos antes de presentarlo; después puedes revisar el siguiente sin volver a subir los archivos. Se comprueban bonificaciones, compensaciones y subtotales negativos, se indican las páginas correspondientes y se conservan los PDF originales completos. Cada RLC debe ocupar una página; una RNT puede tener varias.
+
+SEPE y Seguridad Social incorporan las cabeceras, navegación y organización visual de las sedes de referencia, con acceso a Contrat@ y Sistema RED. Las operaciones siguen siendo locales e independientes por práctica. La generación de identificadores de prácticas y adjuntos también funciona sin `crypto.randomUUID`, evitando el fallo que se producía en HTTP.

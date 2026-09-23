@@ -30,7 +30,7 @@ it('ofrece tres gestiones y conserva filtros al usar migas, atrás y adelante',a
  render(<SepeWorkspace/>);
  expect(within(screen.getByRole('region',{name:'Servicios de contratos'})).getAllByRole('link')).toHaveLength(3);
  const menu=screen.getByRole('navigation',{name:'Servicios de contratación'});
- fireEvent.click(within(menu).getByRole('link',{name:'Consultar comunicaciones'}));
+ fireEvent.click(within(menu).getByRole('link',{name:'Consulta de comunicaciones'}));
  expect(window.location.hash).toBe('#/servicios/sepe?consulta=1');
  expect(window.location.pathname).toBe('/repositorio/');
  expect(window.location.search).toBe('?outer=kept');

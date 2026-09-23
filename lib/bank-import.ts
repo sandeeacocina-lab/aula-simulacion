@@ -1,0 +1,31 @@
+// Shared by browser review and server validation. All ledger amounts are integer cents.
+export type ImportRow={row:number;date:string;concept:string;name:string;reference:string;iban:string;delta:number};
+export type ImportReviewRow=ImportRow&{duplicate:boolean;duplicateReason:string;included:boolean};
+export type ImportPreview={rows:ImportReviewRow[];errors:string[];warnings:string[];fingerprint:string;revision:number;before:number;after:number;credits:number;debits:number;count:number;skipped:number;minimum:number;existingId?:string};
+export function importDate(value:unknown){let s:string;if(value instanceof Date)s=value.toISOString().slice(0,10);else if(typeof value==='number'&&Number.isFinite(value)){const ms=Date.UTC(1899,11,30)+Math.floor(value)*86400000;s=new Date(ms).toISOString().slice(0,10);}else{s=String(value??'').trim();const match=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);if(match)s=`${match[3]}-${match[2].padStart(2,'0')}-${match[1].padStart(2,'0')}`;}
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(s)||s<'2000-01-01'||s>'2100-12-31'||!Number.isFinite(Date.parse(s))||new Date(s+'T00:00:00Z').toISOString().slice(0,10)!==s)throw Error('fecha no válida; utiliza una fecha de Excel, dd/mm/aaaa o aaaa-mm-dd');return s;
+}
+export function importCents(value:unknown){if(typeof value==='number'){if(!Number.isFinite(value)||Math.abs(value)>1000000||Math.abs(value*100-Math.round(value*100))>1e-6)throw Error('importe numérico no válido; admite hasta dos decimales');return Math.round(value*100);}if(value===''||value===null||value===undefined)return 0;let s=String(value).trim().replace(/[\s€]/g,'').replace(/EUR/gi,'');if(/^\(.*\)$/.test(s))s='-'+s.slice(1,-1);if(s.includes(',')){if(!/^[+-]?(?:\d{1,3}(?:\.\d{3})*|\d+),\d{1,2}$/.test(s))throw Error('importe no válido');s=s.replaceAll('.','').replace(',','.');}else if(/^[+-]?\d{1,3}(?:\.\d{3})+$/.test(s))s=s.replaceAll('.','');if(!/^[+-]?\d+(?:\.\d{1,2})?$/.test(s))throw Error('importe no válido; admite hasta dos decimales');const cents=Math.round(Number(s)*100);if(!Number.isSafeInteger(cents)||Math.abs(cents)>100000000)throw Error('el importe no puede superar 1.000.000 EUR');return cents;}
+const plain=(v:unknown,max:number,label:string)=>{const s=String(v??'').trim();if(s.length>max||/[\u0000-\u001f]/.test(s))throw Error(label+' no válido');return s;};
+export function validateImportRows(value:unknown):ImportRow[]{
+ if(!Array.isArray(value)||!value.length||value.length>500)throw Error('Selecciona entre 1 y 500 movimientos.');
+ return value.map((r,i)=>{
+  const row=Number.isSafeInteger(r?.row)&&r.row>0?r.row:i+2;
+  try{
+   if(!r||typeof r!=='object'||Array.isArray(r))throw Error('movimiento no válido');
+   const date=importDate(r.date),concept=plain(r.concept,160,'Concepto');if(!concept)throw Error('falta el concepto');
+   const name=plain(r.name,120,'Empresa o persona'),reference=plain(r.reference,100,'Referencia'),iban=plain(r.iban,40,'IBAN').replace(/\s/g,'').toUpperCase(),delta=r.delta;
+   if(!Number.isSafeInteger(delta)||delta===0||Math.abs(delta)>100000000)throw Error('el importe debe ser distinto de cero y no superar 1.000.000 EUR');
+   if(iban&&!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban))throw Error('formato de IBAN no válido');
+   return {row,date,concept,name,reference,iban,delta};
+  }catch(e){throw Error('Fila '+row+': '+(e as Error).message);}
+ });
+}
+export const importKey=(r:Omit<ImportRow,'row'>)=>JSON.stringify([r.date,r.concept.trim().toLocaleLowerCase('es'),r.name.trim().toLocaleLowerCase('es'),r.reference.trim().toLocaleLowerCase('es'),r.iban.replace(/\s/g,'').toUpperCase(),r.delta]);
+const normalized=(s:unknown)=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const aliases:Record<string,string[]>={date:['fecha','fechaoperacion','fechacontabilizacion'],concept:['concepto','descripcion'],name:['empresa','empresaopersona','contraparte','beneficiario','nombre'],reference:['referencia','ref'],iban:['iban','ibancontraparte','ibanbeneficiario','ibandestinatario'],amount:['importe','importeeur'],credit:['entrada','entradaeur','ingreso','ingresos','abono','abonos'],debit:['salida','salidaeur','gasto','gastos','cargo','cargos']};
+export function parseImportMatrix(matrix:unknown[][]){let header=-1,columns:Record<string,number>={};for(let i=0;i<Math.min(20,matrix.length);i++){const names=matrix[i].map(normalized),c:Record<string,number>={};for(const [key,values] of Object.entries(aliases)){const matches=names.map((v,j)=>values.includes(v)?j:-1).filter(j=>j>=0);if(matches.length>1)throw Error('Hay columnas repetidas para '+key+'.');c[key]=matches[0]??-1;}if(c.date>=0&&c.concept>=0&&(c.amount>=0||c.credit>=0||c.debit>=0)){header=i;columns=c;break;}}
+ if(header<0)throw Error('Faltan las columnas Fecha, Concepto e Importe (o Entrada y Salida). Descarga la plantilla.');
+ const rows:ImportRow[]=[],errors:string[]=[];for(let i=header+1;i<matrix.length;i++){const cells=matrix[i];if(!cells.some(v=>v!==''&&v!==null&&v!==undefined))continue;try{const val=(key:string)=>{const value=columns[key]>=0?cells[columns[key]]:'';if(value&&typeof value==='object'&&('formula' in value||'sharedFormula' in value))throw Error('contiene fórmulas en los datos del movimiento. Pega sus resultados como valores antes de importar.');return value;},amount=val('amount'),hasAmount=amount!==''&&amount!==null&&amount!==undefined;const credit=importCents(val('credit')),debit=importCents(val('debit'));if(credit<0||debit<0||credit&&debit)throw Error('utiliza una entrada o una salida positiva en cada fila');if(hasAmount&&(credit||debit))throw Error('utiliza Importe o Entrada/Salida, sin mezclar ambos');const delta=hasAmount?importCents(amount):credit-debit;rows.push(...validateImportRows([{row:i+1,date:importDate(val('date')),concept:val('concept'),name:val('name'),reference:val('reference'),iban:val('iban'),delta}]));}catch(e){errors.push('Fila '+(i+1)+': '+(e as Error).message.replace(/^Fila \d+: /,''));}}
+ if(rows.length>500)errors.push('El archivo contiene más de 500 movimientos. Divide la práctica en varios archivos.');if(!rows.length&&!errors.length)errors.push('El archivo no contiene movimientos.');return {rows,errors};
+}

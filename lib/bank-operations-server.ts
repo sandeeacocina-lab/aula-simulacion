@@ -1,3 +1,4 @@
+import {newMailId} from '@/lib/mail-types';
 import {companyId,companyProfile} from './company-server';
 import {bankDb as db,bankJson as json,bankUuid as uuid,bankText as text,bankSha as sha,bankAccount as account,bankBatch as batch,bankDetails as details,bankBoundary as boundary,bankPayload as payload,bankBatchInsert as batchInsert} from './bank-server';
 import {BankError,cents,validDate,normalizeIban,validIban} from './bank-xml';
@@ -41,7 +42,7 @@ export function writeBankOperations(req:Request){return boundary(async()=>{
  if(finance)extra.push(db().prepare(`INSERT INTO bank_products(id,company_id,kind,title,data,created_at) SELECT ?,?,?,?,?,? WHERE ${committed}`).bind(id,companyId(),kind,finance.title,JSON.stringify(finance),now,...args));
  if(linkedProduct)extra.push(db().prepare(`INSERT INTO bank_product_payments(product_id,installment,batch_id) SELECT ?,?,? WHERE ${committed}`).bind(linkedProduct.id,installment,id,...args));
  // Guards share the same transaction as the ledger, including mandate cancellation or product deletion races.
- const guard=crypto.randomUUID(),checks:D1PreparedStatement[]=[];
+ const guard=newMailId(),checks:D1PreparedStatement[]=[];
  if(selectedMandate)checks.push(db().prepare('INSERT INTO practice_guards(id,valid) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM bank_mandates WHERE id=? AND revision=? AND status=?) THEN 1 ELSE 0 END').bind(guard,selectedMandate.id,selectedMandate.revision,'active'));
  if(linkedProduct)checks.push(db().prepare('INSERT INTO practice_guards(id,valid) SELECT ?,CASE WHEN EXISTS(SELECT 1 FROM bank_products WHERE id=?) AND NOT EXISTS(SELECT 1 FROM bank_product_payments WHERE product_id=? AND installment=?) THEN 1 ELSE 0 END').bind(guard,linkedProduct.id,linkedProduct.id,installment));
  try{const results=await db().batch([...checks,batchInsert(b,fingerprint,'manual:'+id,'',a.revision),db().prepare(`UPDATE bank_accounts SET balance=balance+?,revision=revision+1 WHERE id=? AND revision=? AND ${committed}`).bind(delta,companyId(),a.revision,...args),db().prepare(`INSERT INTO bank_movements(company_id,batch_id,line,name,iban,amount,delta,balance,concept,reference,kind,requested_date,booking_date,created_at,mandate_id,mandate_date,source_name,source_iban) SELECT ?,?,1,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? WHERE ${committed}`).bind(companyId(),id,name,iban,amount,delta,b.after,concept,reference||id,kind,date,date,now,mandateId,mandateDate,`${companyProfile().name}`,a.iban,...args),...extra,db().prepare('DELETE FROM practice_guards WHERE id=?').bind(guard)]);if(!results[checks.length].meta.changes)throw new BankError('El saldo ha cambiado. Revisa de nuevo.',409);

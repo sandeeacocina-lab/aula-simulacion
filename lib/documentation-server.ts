@@ -1,3 +1,4 @@
+import {newMailId} from '@/lib/mail-types';
 import {env,allFiles} from './local/runtime';
 import {safeName} from './mail-attachments';
 import {checkDocuments,DOCUMENT_CATEGORIES,DOCUMENT_STATUSES,type Assignment,type PracticeDocument} from './documentation-types';
@@ -51,7 +52,7 @@ export async function writeDocumentation(request:Request){try{
   else await env.DB.prepare('UPDATE documentation_assignments SET title=?,period=?,instructions=?,revision=revision+1 WHERE id=?').bind(title,period,instructions,id).run();
   const position=Number(await env.DB.prepare('SELECT COALESCE(MAX(position)+1,0) AS n FROM documentation_files WHERE assignment_id=?').bind(id).first<number>('n'));
   for(const [index,file] of shuffled(files).entries()){
-   const documentId=crypto.randomUUID(),key=`documentation/demo/${id}/${documentId}`,name=safeName(file.name),type=fileType(name);
+   const documentId=newMailId(),key=`documentation/demo/${id}/${documentId}`,name=safeName(file.name),type=fileType(name);
    await env.BUCKET.put(key,await file.arrayBuffer(),{httpMetadata:{contentType:type}});
    await env.DB.prepare('INSERT INTO documentation_files(id,assignment_id,name,file_key,type,size,position) VALUES (?,?,?,?,?,?,?)').bind(documentId,id,name,key,type,file.size,position+index).run();
   }

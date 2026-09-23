@@ -27,6 +27,26 @@ async function sepe(xml=contractXml()){const file=Buffer.from(xml).toString('bas
 beforeAll(async()=>{setEngineForTests(await initSqlJs());});
 beforeEach(async()=>{const db=await freshDatabase();await persistDatabase(db.export(),{replaceFiles:true});db.close();for(const key of Object.keys(localStorage))delete localStorage[key];});
 describe('Práctica estática, persistencia y aislamiento',()=>{
+ it('presenta cada CCC de un PDF múltiple, conserva originales y no mezcla importes',async()=>{
+  const files=['RNT','RLC'].map(kind=>({filename:kind+'.pdf',file:socialPdf(kind,{pages:[{ccc:'00000000901',deductions:true},{ccc:'00000000902'}]}).toString('base64')}));
+  const first=await post('seguridad-social',{action:'preview',files});expect(first.liquidations).toHaveLength(2);expect(first.documents[1].total).toBe(1686);expect(first.documents[0].sourcePages).toEqual([1]);
+  const register={action:'register',files,id:uid(),fingerprint:first.fingerprint,submissionDate:date,consent:true,warningsAccepted:true};
+  await post('seguridad-social',register,400);
+  const second=await post('seguridad-social',{action:'preview',files,liquidation:first.liquidations[1].id});expect(second.documents[1].total).toBe(111686);expect(second.documents[0].sourcePages).toEqual([2]);
+  await post('seguridad-social',{...register,liquidation:second.selectedLiquidation},409);
+  const a=await post('seguridad-social',{...register,liquidation:first.selectedLiquidation},201),b=await post('seguridad-social',{...register,id:uid(),liquidation:second.selectedLiquidation,fingerprint:second.fingerprint},201);
+  expect(a.batch.ccc).toBe('00000000901');expect(b.batch.ccc).toBe('00000000902');expect((await get('seguridad-social')).total).toBe(2);
+  const download=await localRequest('/api/seguridad-social?batch='+b.batch.id+'&pdf=RLC');expect(Buffer.from(await download.arrayBuffer())).toEqual(Buffer.from(files[1].file,'base64'));
+  expect((await post('seguridad-social',{action:'preview',files})).duplicates).toHaveLength(2);
+ });
+ it.skipIf(!process.env.SOCIAL_MULTI_SAMPLE_DIR)('lee los dos PDF aportados sin registrar la revisión',async()=>{
+  const {readFileSync}=await import('node:fs'),{resolve}=await import('node:path');
+  const files=['Relación nominal de trabajadores.pdf','Recibo de liquidación de cotizaciones.pdf'].map(filename=>({filename,file:readFileSync(resolve(process.env.SOCIAL_MULTI_SAMPLE_DIR!,filename)).toString('base64')}));
+  const a=await post('seguridad-social',{action:'preview',files});expect(a.liquidations).toHaveLength(2);expect(a.documents[1].total).toBe(58134);expect(a.documents[0].header.workers).toBe(3);
+  const b=await post('seguridad-social',{action:'preview',files,liquidation:a.liquidations[1].id});expect(b.documents[1].total).toBe(45952);expect(b.documents[0].header.workers).toBe(1);
+  expect((await get('seguridad-social')).total).toBe(0);expect((await allFiles()).size).toBe(0);
+ });
+
  it('ejecuta cobros, nóminas y pagos, rechaza duplicados y libera la referencia al borrar',async()=>{
   await openBank();const xml=bankXml(),before=await get('banco'),p=await post('banco',{action:'preview',xml,filename:'remesa.xml'});
   expect((await get('banco')).total).toBe(1);expect(p.parsed.total).toBe(3030);

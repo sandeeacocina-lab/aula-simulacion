@@ -1,0 +1,1 @@
+import{at as e}from"./index-Czli-yX3.js";var t=()=>`demo`,n=e;export{n,t};

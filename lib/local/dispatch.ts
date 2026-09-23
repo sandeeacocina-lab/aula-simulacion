@@ -7,6 +7,7 @@ export async function localRequest(url:string,init?:RequestInit):Promise<Respons
   switch(path){
    case '/api/banco':{const m=await import('../bank-server');return write?m.writeBank(request):m.readBank(request);}
    case '/api/banco/operaciones':{const m=await import('../bank-operations-server');return write?m.writeBankOperations(request):m.readBankOperations(request);}
+   case '/api/banco/importar':return write?(await import('../bank-import-server')).importBank(request):Response.json({error:'Método no disponible.'},{status:405});
    case '/api/sepe':{const m=await import('../sepe-server');return write?m.writeSepe(request):m.readSepe(request);}
    case '/api/seguridad-social':{const m=await import('../social-server');return write?m.writeSocial(request):m.readSocial(request);}
    case '/api/seguridad-social/registro':{const m=await import('../social-registry-server');return write?m.writeRegistry(request):m.readRegistry(request);}

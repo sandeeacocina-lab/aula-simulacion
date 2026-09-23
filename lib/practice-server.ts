@@ -1,3 +1,4 @@
+import {newMailId} from '@/lib/mail-types';
 import {companyId,companyProfile} from './company-server';
 import {env} from '@/lib/local/runtime';
 type Scope='sepe'|'social'|'registry'|'bank'|'mail'|'mandate'|'documentation'|'document'|'all';
@@ -64,7 +65,7 @@ export async function managePractice(request:Request){try{
  const token=await sha(JSON.stringify({company:companyId(),scope:p.scope,id,stamp:before?.stamp}));
  if(p.action==='preview')return json({token,counts:prepared.counts,notes:prepared.notes});
  if(p.confirm!=='BORRAR'||p.token!==token)throw new PracticeError('Los datos han cambiado o falta confirmar el borrado. Abre de nuevo la confirmación.',409);
- const guard=crypto.randomUUID();try{await db().batch([
+ const guard=newMailId();try{await db().batch([
   db().prepare(`INSERT INTO practice_guards(id,valid) SELECT ?,CASE WHEN (${sql})=? THEN 1 ELSE 0 END`).bind(guard,before!.stamp),
   db().prepare("INSERT OR IGNORE INTO practice_files(key) SELECT value FROM json_each(?)").bind(JSON.stringify(prepared.files)),...prepared.statements,db().prepare('DELETE FROM practice_guards WHERE id=?').bind(guard),
  ]);}catch(e){if(String(e).includes('practice_guard_valid'))throw new PracticeError('Otro equipo ha cambiado los datos. Revisa el borrado de nuevo.',409);throw e;}

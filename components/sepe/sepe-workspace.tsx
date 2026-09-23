@@ -48,17 +48,17 @@ export default function SepeWorkspace(){
  function search(e:FormEvent){e.preventDefault();setFilter({q:query,from,to,page:0});}
  return <div className="sepe-app">
   <a className="sepe-skip" href="#contenido">Saltar al contenido</a>
-  <SedeHeader onHome={e=>navigate('services',e)}/>
+  <SedeHeader onHome={e=>navigate('services',e)} onNavigate={navigate} onHelp={()=>setHelp(true)}/>
   <div className="sepe-shell">
    <nav className="sepe-breadcrumb" aria-label="Ruta de navegación"><a href={companyUrl('/')}>Central de simulación</a><span aria-hidden="true">/</span><span>SEPE · Empresas</span><span aria-hidden="true">/</span>{tab==='services'?<strong aria-current="page">Contratos</strong>:<><a href={viewHref('services')} onClick={e=>navigate('services',e)}>Contratos</a><span aria-hidden="true">/</span><strong aria-current="page">{sepeViewTitles[tab]}</strong></>}</nav>
-   <div className="sepe-service-heading"><h1 ref={pageHeading} tabIndex={-1}>{sepeViewTitles[tab]}</h1><p>Servicios para empresas</p></div>
+
    <div className="sepe-session"><span><strong>Empresa:</strong> {clientCompany().name}</span><span>Comunicación y consulta de contratos</span></div>
-   <div className="sepe-workspace-frame"><nav className="sepe-application-menu" aria-label="Servicios de contratación"><span className="sepe-menu-label">CONTRATOS · EMPRESAS</span><a href={viewHref('services')} aria-current={tab==='services'?'page':undefined} onClick={e=>navigate('services',e)}>Todos los servicios</a><a href={viewHref('import')} aria-current={tab==='import'?'page':undefined} onClick={e=>navigate('import',e)}>Comunicar contratos</a><a href={viewHref('history')} aria-current={tab==='history'?'page':undefined} onClick={e=>navigate('history',e)}>Consultar comunicaciones</a><a href={viewHref('models')} aria-current={tab==='models'?'page':undefined} onClick={e=>navigate('models',e)}>Modelos oficiales</a><button type="button" onClick={()=>setHelp(true)}><HelpCircle size={18}/>Ayuda e instrucciones</button></nav>
+   <div className="sepe-workspace-frame"><aside className="sepe-enterprise-menu"><h2>Empresas</h2><nav className="sepe-application-menu" aria-label="Servicios de contratación"><a href={viewHref('services')} aria-current={tab==='services'||tab==='import'?'page':undefined} onClick={e=>navigate('services',e)}><FileText size={52} strokeWidth={1.4} aria-hidden="true"/><span>Contratos</span></a><a href={viewHref('history')} aria-current={tab==='history'?'page':undefined} onClick={e=>navigate('history',e)}><FolderOpen size={52} strokeWidth={1.4} aria-hidden="true"/><span>Consulta de comunicaciones</span></a><a href={viewHref('models')} aria-current={tab==='models'?'page':undefined} onClick={e=>navigate('models',e)}><BookOpen size={52} strokeWidth={1.4} aria-hidden="true"/><span>Modelos de contratos</span></a><button type="button" onClick={()=>setHelp(true)}><HelpCircle size={52} strokeWidth={1.4} aria-hidden="true"/><span>Ayuda e instrucciones</span></button></nav></aside>
    <div className="sepe-layout">
-    <main className="sepe-content" id="contenido">
+    <main className="sepe-content" id="contenido"><div className="sepe-service-heading"><h1 ref={pageHeading} tabIndex={-1}>{sepeViewTitles[tab]}</h1><p>Servicios para empresas</p></div>
      <section aria-label="Servicios de contratos" hidden={tab!=='services'}>
-      <div className="sepe-section-heading"><h2>Gestiones de contratación</h2></div>
-      <div className="sepe-service-list">
+      <div className="sepe-section-heading"><h2>Comunicar la contratación. Contrat@</h2></div>
+      <p className="sepe-service-intro">Seleccione el trámite de contratación que desea realizar. Puede comunicar contratos mediante un fichero XML, consultar los envíos de la empresa o acceder a los modelos de contratos.</p><div className="sepe-service-list">
        <a href={viewHref('import')} onClick={e=>navigate('import',e)}><FileText size={25} aria-hidden="true"/><div><h3>Comunicar contratos</h3><p>Envíe el fichero XML, compruebe sus datos y obtenga el justificante de la comunicación.</p><span>Acceder a Contrat@</span></div></a>
        <a href={viewHref('history')} onClick={e=>navigate('history',e)}><FolderOpen size={25} aria-hidden="true"/><div><h3>Consultar comunicaciones</h3><p>Localice los envíos de la empresa y consulte o descargue sus justificantes.</p><span>Consultar el expediente</span></div></a>
        <a href={viewHref('models')} onClick={e=>navigate('models',e)}><BookOpen size={25} aria-hidden="true"/><div><h3>Modelos oficiales de contratos</h3><p>Acceda al catálogo del SEPE para descargar y cumplimentar los impresos.</p><span>Consultar modelos</span></div></a>

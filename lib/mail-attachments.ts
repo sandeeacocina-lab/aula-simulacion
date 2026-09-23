@@ -1,3 +1,4 @@
+import {newMailId} from '@/lib/mail-types';
 import {companyId} from './company-server';
 import {env} from '@/lib/local/runtime';
 import {MailError} from './mail-error';
@@ -19,7 +20,7 @@ export async function attachmentPlan(key:string,ids:unknown,files:File[],current
   const bytes=await f.arrayBuffer();
   const digest=await crypto.subtle.digest('SHA-256',bytes);
   const sha256=Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,'0')).join('');
-  const id=crypto.randomUUID(),name=safeName(f.name);
+  const id=newMailId(),name=safeName(f.name);
   uploads.push({meta:{id,name,size:f.size,type:typeFor(name),key:`mail/${companyId()}/${key}/${id}`,sha256},bytes});
  }
  const manifest=[...kept,...uploads.map(f=>f.meta)];

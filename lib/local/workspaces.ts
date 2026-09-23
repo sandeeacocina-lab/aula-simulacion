@@ -1,3 +1,4 @@
+import {newMailId} from '@/lib/mail-types';
 import {getProfile,saveProfile,validateProfile,type Profile} from './profile';
 import {hasWorkspaceSelection,selectedWorkspaceId,setSelectedWorkspaceId,validWorkspaceId,workspaceStorage,WORKSPACES_PREFIX} from './storage';
 
@@ -24,7 +25,7 @@ export function selectWorkspace(id:string){
  setSelectedWorkspaceId(id);
 }
 export function createWorkspace(value:unknown):{id:string;profile:Profile}{
- const profile=validateProfile(value),id='custom-'+crypto.randomUUID(),storage=workspaceStorage(id);
+ const profile=validateProfile(value),id='custom-'+newMailId(),storage=workspaceStorage(id);
  try{saveProfile(profile,id);globalThis.localStorage.setItem(CUSTOM_PREFIX+id,'1');}
  catch(error){storage.removeItem('profile');globalThis.localStorage.removeItem(CUSTOM_PREFIX+id);throw error;}
  return {id,profile};

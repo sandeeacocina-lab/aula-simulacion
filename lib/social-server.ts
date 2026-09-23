@@ -1,3 +1,4 @@
+import {newMailId} from '@/lib/mail-types';
 import {companyId,companyProfile} from './company-server';
 import {env} from '@/lib/local/runtime';
 import {contributionSummary} from './social-receipt-data';
@@ -37,16 +38,29 @@ export function readSocial(req:Request){return boundary(async()=>{
 });}
 export function writeSocial(req:Request){return boundary(async()=>{
  const p=await payload(req);if(!['preview','register'].includes(String(p.action))||!Array.isArray(p.files)||p.files.length<1||p.files.length>2)throw new SocialError('Seleccione una RNT, una liquidación o un documento de cada tipo.');
- const files:{bytes:Uint8Array;doc:SocialDocument;hash:string}[]=[];
- for(const item of p.files){if(!item||typeof item!=='object'||typeof item.filename!=='string'||item.filename.length>180||! /\.pdf$/i.test(item.filename)||typeof item.file!=='string'||item.file.length>6_990_508||item.file.length%4!==0||/[^A-Za-z0-9+/=]/.test(item.file))throw new SocialError('Seleccione archivos PDF de hasta 5 MB cada uno.',413);let bytes:Uint8Array;try{bytes=Uint8Array.from(atob(item.file),c=>c.charCodeAt(0));}catch{throw new SocialError('El PDF no se ha transmitido correctamente.');}const filename=item.filename.replace(/[\\/\r\n\u0000-\u001f"]/g,'_');files.push({bytes,doc:await extractSocialPdf(bytes,filename,companyProfile().shortName),hash:await sha(bytes)});}
- const documents=files.map(f=>f.doc);compareSocialDocuments(documents);const fingerprint=await sha(canonicalSocial(documents)),keys=await Promise.all(documents.map(d=>sha(socialIdentity(d)))),liqKey=await sha(liquidationIdentity(documents[0])),signature=liquidationSignature(documents[0]);
+ const allFiles:{bytes:Uint8Array;doc:SocialDocument;hash:string}[]=[];
+ for(const item of p.files){if(!item||typeof item!=='object'||typeof item.filename!=='string'||item.filename.length>180||! /\.pdf$/i.test(item.filename)||typeof item.file!=='string'||item.file.length>6_990_508||item.file.length%4!==0||/[^A-Za-z0-9+/=]/.test(item.file))throw new SocialError('Seleccione archivos PDF de hasta 5 MB cada uno.',413);let bytes:Uint8Array;try{bytes=Uint8Array.from(atob(item.file),c=>c.charCodeAt(0));}catch{throw new SocialError('El PDF no se ha transmitido correctamente.');}const filename=item.filename.replace(/[\\/\r\n\u0000-\u001f"]/g,'_');const hash=await sha(bytes);for(const doc of await extractSocialPdf(bytes,filename,companyProfile().shortName))allFiles.push({bytes,doc,hash});}
+ const groups=new Map<string,typeof allFiles>();
+ for(const f of allFiles){const key=liquidationIdentity(f.doc),group=groups.get(key)||[];group.push(f);groups.set(key,group);}
+ const liquidations=[];
+ for(const [key,group] of groups){
+  const docs=group.map(f=>f.doc);compareSocialDocuments(docs);
+  if(p.files.length===2&&docs.length!==2)throw new SocialError('La RNT y el RLC deben incluir las mismas liquidaciones (CCC y periodo). Seleccione los PDF correspondientes o presente un solo tipo de documento.');
+  const h=docs[0].header;
+  liquidations.push({id:await sha(key),company:h.company,ccc:h.ccc,periodFrom:h.periodFrom,periodTo:h.periodTo,workers:h.workers,kinds:docs.map(d=>d.kind).sort().reverse().join(' + '),total:docs.find(d=>d.kind==='RLC')?.total??null});
+ }
+ if(p.action==='register'&&liquidations.length>1&&!p.liquidation)throw new SocialError('Seleccione la liquidación que desea presentar.');
+ const selectedLiquidation=p.liquidation===undefined?liquidations[0].id:p.liquidation;
+ const selected=liquidations.findIndex(l=>l.id===selectedLiquidation);
+ if(selected<0)throw new SocialError('La liquidación seleccionada no se encuentra en estos PDF. Vuelva a revisarlos.');
+ const files=[...groups.values()][selected],documents=files.map(f=>f.doc);const fingerprint=await sha(canonicalSocial(documents)),keys=await Promise.all(documents.map(d=>sha(socialIdentity(d)))),liqKey=await sha(liquidationIdentity(documents[0])),signature=liquidationSignature(documents[0]);
  const companions=await db().prepare('SELECT data FROM social_documents WHERE company_id=? AND liquidation_key=?').bind(companyId(),liqKey).all<{data:string}>();for(const c of companions.results){const d=JSON.parse(c.data) as SocialDocument;for(const incoming of documents)if(incoming.kind!==d.kind)compareSocialDocuments([incoming,d]);}
  const previous=await duplicates(keys),warnings=[...new Set(documents.flatMap(d=>d.warnings))];
- if(p.action==='preview')return json({documents,fingerprint,warnings,duplicates:previous});
+ if(p.action==='preview')return json({documents,fingerprint,warnings,duplicates:previous,liquidations,selectedLiquidation});
  if(p.consent!==true)throw new SocialError('Confirme que ha revisado los datos antes de presentar.');if(warnings.length&&p.warningsAccepted!==true)throw new SocialError('Revise y acepte las observaciones.');if(p.fingerprint!==fingerprint)throw new SocialError('Los documentos han cambiado. Vuelva a importarlos y revise sus datos.',409);
  const id=uuid(p.id),date=socialValidDate(p.submissionDate),existing=await stored(id);if(existing){if(existing.fingerprint===fingerprint&&existing.submissionDate===date)return json(await receipt(id));throw new SocialError('Esta referencia corresponde a otra presentación.',409,existing.id);}
  if(previous.length)throw new SocialError('Ya existe un documento de este tipo para la misma liquidación. Consulte su justificante; no se ha duplicado la presentación.',409,previous[0].batchId);
- const h=documents[0].header,now=new Date().toISOString(),reference='SIM-TGSS-'+date.slice(0,4)+'-'+id.replaceAll('-','').slice(0,12).toUpperCase(),uploadKey=`social/${companyId()}/${id}/${crypto.randomUUID()}`;
+ const h=documents[0].header,now=new Date().toISOString(),reference='SIM-TGSS-'+date.slice(0,4)+'-'+id.replaceAll('-','').slice(0,12).toUpperCase(),uploadKey=`social/${companyId()}/${id}/${newMailId()}`;
  const entries=files.map((f,i)=>({kind:f.doc.kind,identityKey:keys[i],liquidationKey:liqKey,signature:liquidationSignature(f.doc),data:JSON.stringify(f.doc),pdfKey:uploadKey+'/'+f.doc.kind+'.pdf',hash:f.hash}));
  const cleanup=async()=>{for(const e of entries)await bucket().delete(e.pdfKey);};
  try{for(let i=0;i<files.length;i++)await bucket().put(entries[i].pdfKey,files[i].bytes,{httpMetadata:{contentType:'application/pdf'}});

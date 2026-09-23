@@ -7,7 +7,7 @@ export type PdfSpan={text:string;x:number;y:number};
 export type SocialPage={width:number;height:number;items:PdfSpan[]};
 export const normal=(s:string)=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
 const fail=(s:string):never=>{throw new SocialError(s);};
-function money(s:string){if(!/^-?(?:\d{1,3}(?:\.\d{3})*|\d+),\d{2}$/.test(s))return fail('Hay un importe ausente o ilegible en el PDF. No se ha registrado el documento.');const n=Math.round(Number(s.replaceAll('.','').replace(',','.'))*100);if(!Number.isSafeInteger(n)||Math.abs(n)>10_000_000_000)return fail('El importe supera el límite de la simulación.');return n;}
+function money(s:string){s=s.replace(/\s/g,'').replace(/\u2212/g,'-');if(!/^-?(?:\d{1,3}(?:\.\d{3})*|\d+),\d{2}$/.test(s))return fail('Hay un importe ausente o ilegible en el PDF. No se ha registrado el documento.');const n=Math.round(Number(s.replaceAll('.','').replace(',','.'))*100);if(!Number.isSafeInteger(n)||Math.abs(n)>10_000_000_000)return fail('El importe supera el límite de la simulación.');return n;}
 export function socialValidDate(s:unknown){if(typeof s!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s)||s<'1900-01-01'||s>'2199-12-31')return fail('La fecha no es válida.');const d=new Date(s+'T12:00:00Z');if(!Number.isFinite(d.getTime())||d.toISOString().slice(0,10)!==s)return fail('La fecha no es válida.');return s;}
 function date(s:string){if(!/^\d{2}\/\d{2}\/\d{4}$/.test(s))return fail('No se puede leer una fecha del documento.');return socialValidDate(s.split('/').reverse().join('-'));}
 function period(s:string){const m=s.replace(/\s/g,'').match(/^(\d{2})\/(\d{4})-(\d{2})\/(\d{4})$/);if(!m)return fail('No se reconoce el periodo de liquidación.');const from=m[2]+'-'+m[1],to=m[4]+'-'+m[3];socialValidDate(from+'-01');socialValidDate(to+'-01');if(from>to)return fail('El periodo de liquidación está invertido.');return [from,to];}
@@ -51,8 +51,8 @@ export function parseSocialPages(pages:SocialPage[],filename:string,expectedComp
    }
    if(sums){const totals:SocialAmount[]=[];for(const y of baselines(p.filter(w=>w.y>sums.y+5&&w.x>=15&&w.x<840))){for(const [min,max,value] of [[15,375,375],[425,775,775]]){const description=at(p,min,max,y),raw=at(p,value,min===15?425:842,y);if(description||raw){if(!description)return fail('Falta el concepto de un total de la RNT.');totals.push({description,amount:money(raw),base:null});}}}allTotals.push(totals);}
   }else{
-   if(pages.length!==1)return fail('Por ahora se admite la liquidación de cotizaciones de una página de NominaSOL.');
-   for(const y of baselines(p.filter(w=>w.y>column.y+5&&(w.x<425||w.x>=495)))){const description=at(p,15,425,y),base=at(p,425,495,y),raw=at(p,495,595.3,y);if(!description&&!raw)continue;amounts.push({description,base:base?money(base):null,amount:money(raw)});}
+   if(pages.length!==1)return fail('Cada liquidación RLC debe ocupar una página. Puede incluir varias liquidaciones con CCC o periodos distintos en el mismo PDF.');
+   for(const y of baselines(p.filter(w=>w.y>column.y+5&&(w.x<425||w.x>=495)))){const description=at(p,15,425,y),base=at(p,425,495,y),raw=at(p,495,595.3,y);if(!description&&!raw)continue;const amount=money(raw),deduction=/^(BONIFICACION(?:ES)?|REDUCCION(?:ES)?|COMPENSACION(?:ES)?)(?:\s|$)/.test(normal(description));amounts.push({description,base:base?money(base):null,amount:deduction?-Math.abs(amount):amount});}
    const last=amounts.at(-1);if(!last||normal(last.description)!=='LIQUIDO DE TOTALES')return fail('No se ha encontrado el total final de la liquidación.');total=last.amount;
    let group=0,subtotals=0,subCount=0;
    for(const r of amounts.slice(0,-1)){if(!r.description)return fail('Falta la descripción de un importe.');if(normal(r.description).startsWith('LIQUIDO ')){if(group!==r.amount)return fail('Un subtotal de la liquidación no coincide con la suma de sus conceptos.');subtotals+=r.amount;group=0;subCount++;}else group+=r.amount;}
@@ -85,9 +85,24 @@ export function compareSocialDocuments(documents:SocialDocument[]){
 export const socialIdentity=(d:SocialDocument)=>[d.kind,d.header.ccc,d.header.periodFrom,d.header.periodTo,d.header.qualification.slice(0,3),d.header.controlDate,d.header.liquidationNumber].join('|');
 export const liquidationIdentity=(d:SocialDocument)=>socialIdentity(d).split('|').slice(1).join('|');
 export function liquidationSignature(d:SocialDocument){const common=d.amounts.find(r=>normal(r.description)===(d.kind==='RNT'?'BASE DE CONTINGENCIAS COMUNES':'CONTINGENCIAS COMUNES'));const base=d.kind==='RNT'?common?.amount:common?.base;if(base===undefined||base===null)return fail('No se reconoce la base de contingencias comunes.');const professional=d.kind==='RNT'?d.amounts.filter(r=>['BASE DE CONTINGENCIAS PROFESIONALES','BASE IT DE AT Y EP DE SITUACIONES ESPECIALES'].includes(normal(r.description))).reduce((n,r)=>n+r.amount,0):d.amounts.find(r=>normal(r.description)==='IT ACCIDENTES DE TRABAJO')?.base;if(professional===undefined||professional===null)return fail('No se reconoce la base de accidentes de trabajo.');return JSON.stringify([normal(d.header.company),normal(d.header.employerId),d.header.workers,normal(d.header.scope),normal(d.header.entity),base,professional]);}
-export const canonicalSocial=(docs:SocialDocument[])=>JSON.stringify([...docs].sort((a,b)=>a.kind.localeCompare(b.kind)).map(({filename,warnings,pages,...data})=>data));
+export const canonicalSocial=(docs:SocialDocument[])=>JSON.stringify([...docs].sort((a,b)=>a.kind.localeCompare(b.kind)).map(({filename,warnings,pages,sourcePages,...data})=>data));
 
-export async function extractSocialPdf(bytes:Uint8Array,filename:string,expectedCompany='Empresa de prácticas'):Promise<SocialDocument>{
+// A NominaSOL export can contain independent liquidations, one per CCC/period.
+// Keep each liquidation separate so worker counts, totals and payments never mix.
+export function parseSocialFilePages(pages:SocialPage[],filename:string,expectedCompany='Empresa de prácticas'):SocialDocument[]{
+ if(!pages.length||pages.length>30)return fail('El PDF debe contener entre 1 y 30 páginas.');
+ const groups=new Map<string,{pages:SocialPage[];sourcePages:number[]}>();
+ const landscape=pages[0].width>pages[0].height;
+ for(const [index,page] of pages.entries()){
+  if((page.width>page.height)!==landscape)return fail('El PDF combina documentos distintos. Selecciónelos como archivos separados.');
+  const scale=(landscape?841.9:595.3)/page.width,h=header(page.items.map(w=>({...w,x:w.x*scale,y:w.y*scale})),landscape);
+  const key=JSON.stringify([h.ccc,h.periodFrom,h.periodTo,h.qualification.slice(0,3),h.controlDate,h.liquidationNumber]);
+  const group=groups.get(key)||{pages:[],sourcePages:[]};group.pages.push(page);group.sourcePages.push(index+1);groups.set(key,group);
+ }
+ return [...groups.values()].map(group=>{const doc=parseSocialPages(group.pages,filename,expectedCompany);if(groups.size>1)doc.sourcePages=group.sourcePages;return doc;});
+}
+
+export async function extractSocialPdf(bytes:Uint8Array,filename:string,expectedCompany='Empresa de prácticas'):Promise<SocialDocument[]>{
  if(bytes.length>5*1024*1024||new TextDecoder().decode(bytes.subarray(0,5))!=='%PDF-')return fail('Seleccione un PDF original de hasta 5 MB.');
  let pdf:Awaited<ReturnType<typeof getDocument>["promise"]>|undefined;
  try{
@@ -96,7 +111,7 @@ export async function extractSocialPdf(bytes:Uint8Array,filename:string,expected
   if(pdf.numPages>30)return fail('El PDF supera el límite de 30 páginas.');
   const pages:SocialPage[]=[];let count=0;
   for(let n=1;n<=pdf.numPages;n++){const page=await pdf.getPage(n),content=await page.getTextContent();count+=content.items.length;if(count>40000)return fail('El documento contiene demasiado texto.');const items=content.items.flatMap(w=>'str'in w&&Math.abs(w.transform[1])+Math.abs(w.transform[2])<0.01?[{text:w.str,x:w.transform[4],y:page.view[3]-w.transform[5]}]:[]);pages.push({width:page.view[2],height:page.view[3],items});}
-  return parseSocialPages(pages,filename,expectedCompany);
+  return parseSocialFilePages(pages,filename,expectedCompany);
  }catch(e){if(e instanceof SocialError)throw e;return fail('No se puede leer este PDF. Compruebe que no esté protegido, dañado o escaneado y vuelva a exportarlo desde el programa.');}
  finally{await pdf?.loadingTask.destroy();}
 }

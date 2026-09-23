@@ -1,3 +1,4 @@
+import {newMailId} from '@/lib/mail-types';
 import {useEffect,useMemo,useState,type FormEvent} from 'react';
 import {FolderOpen,FileText,Plus,Search,CheckCircle2} from 'lucide-react';
 import {AulaHeader,AulaFooter} from '../home';
@@ -16,7 +17,7 @@ async function send(body:FormData|Record<string,unknown>){
 function AssignmentEditor({assignment,onSaved,onClose}:{assignment:Assignment|null;onSaved:(id:string)=>Promise<void>;onClose:()=>void}){
  const [title,setTitle]=useState(assignment?.title||''),[period,setPeriod]=useState(assignment?.period||''),[instructions,setInstructions]=useState(assignment?.instructions||''),[files,setFiles]=useState<File[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState('');
  async function save(event:FormEvent){event.preventDefault();setError('');const problem=checkDocuments(files,assignment?.total||0);if(problem){setError(problem);return;}setBusy(true);try{
-  const form=new FormData();form.set('assignment',JSON.stringify({action:assignment?'edit':'create',id:assignment?.id||crypto.randomUUID(),revision:assignment?.revision,title,period,instructions}));for(const file of files)form.append('files',file,file.name);
+  const form=new FormData();form.set('assignment',JSON.stringify({action:assignment?'edit':'create',id:assignment?.id||newMailId(),revision:assignment?.revision,title,period,instructions}));for(const file of files)form.append('files',file,file.name);
   const result=await send(form);await onSaved(result.id);onClose();
  }catch(e){setError((e as Error).message);}finally{setBusy(false);}}
  return <Dialog open onOpenChange={open=>{if(!open&&!busy)onClose();}}><DialogContent className="documents-dialog"><DialogTitle>{assignment?'Editar encargo':'Preparar un encargo'}</DialogTitle><DialogDescription>Escribe las instrucciones y añade los documentos de partida. Los nuevos archivos se mezclarán al guardarlos.</DialogDescription><form onSubmit={event=>void save(event)}>
