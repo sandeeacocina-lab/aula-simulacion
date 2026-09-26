@@ -1,3 +1,4 @@
+import {validateRegistryBackup} from '../verifactu/registry';
 import {validateVfBackup} from '../verifactu/store';
 import type {Database,SqlValue} from 'sql.js';
 import {allFiles,exclusive,freshDatabase,persistDatabase,readDatabase,type StoredFile} from './runtime';
@@ -5,17 +6,17 @@ import {selectedWorkspaceId,storageSnapshot,workspaceStorage} from './storage';
 import {DEFAULT_PROFILE,getProfile,validateProfile} from './profile';
 import {normalizeSignature} from '../mail-signature';
 const MAX_BYTES=80*1024*1024;
-const tables=['mail_messages','mail_rate_limits','bank_accounts','bank_batches','bank_movements','sepe_batches','sepe_contracts','social_batches','social_documents','social_registry','bank_mandates','bank_products','bank_product_payments','practice_files','practice_guards','bank_preferences','documentation_assignments','documentation_files','vf_invoices','vf_records'] as const;
+const tables=['mail_messages','mail_rate_limits','bank_accounts','bank_batches','bank_movements','sepe_batches','sepe_contracts','social_batches','social_documents','social_registry','bank_mandates','bank_products','bank_product_payments','practice_files','practice_guards','bank_preferences','documentation_assignments','documentation_files','vf_invoices','vf_records','vf_registry'] as const;
 type TableBackup={columns:string[];rows:SqlValue[][]};
 export type Backup={format:'aula-simulacion';version:1;createdAt:string;company:string;tables:Record<string,TableBackup>;storage:Record<string,string>;files:{key:string;type:string;data:string}[]};
 const toBase64=(bytes:Uint8Array)=>{let s='';for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(s);};
 export function downloadBlob(blob:Blob,name:string){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);}
 function tableData(db:Database,name:string){const result=db.exec(`SELECT * FROM "${name}"`)[0];if(result)return {columns:result.columns,rows:result.values};const columns=db.exec(`PRAGMA table_info("${name}")`)[0].values.map(r=>String(r[1]));return {columns,rows:[]};}
-export async function createBackup(){const id=selectedWorkspaceId();return exclusive(async()=>{const db=await readDatabase(id);try{const profile=getProfile(id),data:Backup={format:'aula-simulacion',version:1,createdAt:new Date().toISOString(),company:profile.name,tables:Object.fromEntries(tables.map(t=>[t,tableData(db,t)])),storage:{...storageSnapshot(id),profile:JSON.stringify(profile)},files:[...await allFiles(id)].map(([key,f])=>({key,type:f.type,data:toBase64(f.bytes)}))};return data;}finally{db.close();}},id);}
+export async function createBackup(options:{template?:boolean}={}){const id=selectedWorkspaceId();return exclusive(async()=>{const db=await readDatabase(id);try{const profile=getProfile(id),data:Backup={format:'aula-simulacion',version:1,createdAt:new Date().toISOString(),company:profile.name,tables:Object.fromEntries(tables.map(t=>[t,tableData(db,t)])),storage:{...storageSnapshot(id),profile:JSON.stringify(profile)},files:[...await allFiles(id)].map(([key,f])=>({key,type:f.type,data:toBase64(f.bytes)}))};if(options.template)data.tables.vf_registry.rows=[];return data;}finally{db.close();}},id);}
 const allowedStorage=(key:string)=>key==='profile'||key==='mail-signature-name'||/^aula-(presentaciones-v1|informativas-v1|borrador-(303|111|115)|informativa-borrador-(190|347|349))$/.test(key);
 export async function readBackupFile(file:File){if(file.size>MAX_BYTES)throw Error('La copia supera el límite de 80 MB.');let data:unknown;try{data=JSON.parse(await file.text());}catch{throw Error('No se puede leer la copia. Selecciona un archivo exportado desde esta aula.');}const prepared=await prepareBackup(data);prepared.db.close();return data as Backup;}
 async function prepareBackup(value:unknown){
- const b=value as Backup;if(!b||b.format!=='aula-simulacion'||b.version!==1||!b.tables||typeof b.tables!=='object'||Array.isArray(b.tables)||!b.storage||typeof b.storage!=='object'||Array.isArray(b.storage)||!Array.isArray(b.files)||Object.keys(b.tables).some(name=>!tables.includes(name as typeof tables[number]))||tables.some(name=>!name.startsWith('vf_')&&!name.startsWith('documentation_')&&!b.tables[name])||Boolean(b.tables.documentation_assignments)!==Boolean(b.tables.documentation_files)||Boolean(b.tables.vf_invoices)!==Boolean(b.tables.vf_records))throw Error('Esta copia no es compatible con el aula.');
+ const b=value as Backup;if(!b||b.format!=='aula-simulacion'||b.version!==1||!b.tables||typeof b.tables!=='object'||Array.isArray(b.tables)||!b.storage||typeof b.storage!=='object'||Array.isArray(b.storage)||!Array.isArray(b.files)||Object.keys(b.tables).some(name=>!tables.includes(name as typeof tables[number]))||tables.some(name=>!name.startsWith('vf_')&&!name.startsWith('documentation_')&&!b.tables[name])||Boolean(b.tables.documentation_assignments)!==Boolean(b.tables.documentation_files)||Boolean(b.tables.vf_invoices)!==Boolean(b.tables.vf_records)||!!b.tables.vf_registry&&!b.tables.vf_records)throw Error('Esta copia no es compatible con el aula.');
  const db=await freshDatabase(),files=new Map<string,StoredFile>();
  try{
   db.run('PRAGMA foreign_keys=OFF');db.run('BEGIN');let count=0;
@@ -49,13 +50,14 @@ async function prepareBackup(value:unknown){
    if(key!==`documentation/demo/${assignmentId}/${id}`||!file||file.bytes.length!==size)throw Error('Falta un documento del encargo o su tamaño no coincide.');
   }
   for(const row of db.exec("SELECT source_key FROM vf_invoices WHERE source_key<>''")[0]?.values||[])if(!files.has(String(row[0])))throw Error('Falta el PDF de origen de una factura.');
-  validateVfBackup(db);
+  validateVfBackup(db);validateRegistryBackup(db);
   return {db,files,storage:restoredStorage};
  }catch(e){db.close();throw e instanceof Error?e:Error('La copia no se ha podido comprobar.');}
 }
-export async function restoreBackup(value:Backup,id=selectedWorkspaceId()){return exclusive(async()=>{
+export async function restoreBackup(value:Backup,id=selectedWorkspaceId(),options:{registry?:'independent'|'continue'}={}){return exclusive(async()=>{
  const prepared=await prepareBackup(value),storage=workspaceStorage(id),old=storageSnapshot(id);
  try{
+  if(options.registry!=='continue')prepared.db.run('DELETE FROM vf_registry');
   // Probe storage quota and roll back the preferences if IndexedDB cannot commit.
   for(const key of storage.keys())storage.removeItem(key);
   for(const [key,v] of Object.entries(prepared.storage))storage.setItem(key,v);

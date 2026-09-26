@@ -1,0 +1,32 @@
+name: Compilar central VERIFACTU
+on:
+  push:
+    branches: [verifactu-registro-compartido]
+    paths-ignore:
+      - 'docs/**'
+permissions:
+  contents: write
+concurrency:
+  group: compilar-verifactu
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Guardar compilacion en la rama de preparacion
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs
+          if ! git diff --cached --quiet; then
+            git commit -m "Compila central con registro VERIFACTU compartido"
+            git push origin HEAD:verifactu-registro-compartido
+          fi

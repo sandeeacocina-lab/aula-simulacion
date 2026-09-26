@@ -1,0 +1,1 @@
+import{st as e}from"./index-DfdyNP0X.js";var t=()=>`demo`,n=e;export{n,t};

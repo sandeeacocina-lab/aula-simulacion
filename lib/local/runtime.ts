@@ -1,4 +1,5 @@
 import verifactuSchema from '../../schema/0014_verifactu.sql?raw';
+import registrySchema from '../../schema/0015_verifactu_registry.sql?raw';
 import documentationSchema from '../../schema/0012_documentation.sql?raw';
 import initSqlJs,{type Database,type SqlJsStatic,type SqlValue} from 'sql.js';
 import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
@@ -88,6 +89,7 @@ export async function readDatabase(id=storageWorkspaceId()){
   if(!db.exec('PRAGMA table_info(mail_messages)')[0].values.some(row=>row[1]==='corporate_signature'))db.run("ALTER TABLE mail_messages ADD corporate_signature TEXT NOT NULL DEFAULT 'null'");
   db.run(documentationSchema);
   db.run(verifactuSchema);
+  db.run(registrySchema);
   if(!db.exec('PRAGMA table_info(bank_batches)')[0].values.some(row=>row[1]==='receipt_details'))db.run("ALTER TABLE bank_batches ADD receipt_details TEXT NOT NULL DEFAULT 'null'");
   db.run('PRAGMA foreign_keys=ON');return db;
  }catch(error){db.close();throw error;}
