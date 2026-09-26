@@ -1,0 +1,26 @@
+{
+  "name": "aula-verifactu-registry",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --ip 127.0.0.1 --port 8787 --inspector-port 9231 --env local",
+    "build": "wrangler deploy --dry-run --outdir dist --env \"\"",
+    "deploy": "wrangler d1 migrations apply DB --remote --env \"\" && wrangler deploy --env \"\"",
+    "db:local": "wrangler d1 migrations apply DB --local --env local",
+    "db:remote": "wrangler d1 migrations apply DB --remote --env \"\""
+  },
+  "devDependencies": {
+    "wrangler": "4.141.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "DB": {
+        "description": "Registro de metadatos de facturas simuladas. Base D1 incluida dentro de los límites del plan gratuito."
+      },
+      "ALLOWED_ORIGINS": {
+        "description": "Direcciones de la central autorizadas para el cotejo. Conserva los valores propuestos para la central de Sandra."
+      }
+    }
+  }
+}

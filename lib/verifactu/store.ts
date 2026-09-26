@@ -9,7 +9,8 @@ function unpack(r:any):SavedInvoice{return {invoice:JSON.parse(r.data),state:r.s
 function unpackRecord(r:any):InvoiceRecord{return {seq:r.seq,id:r.id,invoiceId:r.invoice_id,kind:r.kind,previousHash:r.previous_hash,hash:r.hash,createdAt:r.created_at,status:r.status,message:r.message,payload:JSON.parse(r.payload)};}
 async function access<T>(fn:(db:Database)=>T|Promise<T>,write=false,files?:Map<string,StoredFile>,id=selectedWorkspaceId()):Promise<T>{return exclusive(async()=>{const db=await readDatabase(id);try{const result=await fn(db);if(write)await persistDatabase(db.export(),{files},id);return result;}finally{db.close();}},id);}
 export function listInvoices(id=selectedWorkspaceId()){return access(db=>query<any>(db,'SELECT * FROM vf_invoices ORDER BY created_at DESC,id').map(unpack),false,undefined,id);}
-export function listRecords(id=selectedWorkspaceId()){return access(db=>query<any>(db,'SELECT * FROM vf_records ORDER BY seq').map(unpackRecord),false,undefined,id);}
+export function recordsFromDatabase(db:Database){return query<any>(db,'SELECT * FROM vf_records ORDER BY seq').map(unpackRecord);}
+export function listRecords(id=selectedWorkspaceId()){return access(recordsFromDatabase,false,undefined,id);}
 function current(db:Database,id:string){const row=query<any>(db,'SELECT * FROM vf_invoices WHERE id=?',[id])[0];if(!row)throw Error('La factura ya no existe. Actualiza la consulta.');return unpack(row);}
 function validInvoice(i:Invoice){validateShape(i);validateProfile(i.brand);if(i.issuer.nif.trim().toUpperCase()!==getProfile().nif.trim().toUpperCase())throw Error('El emisor no coincide con la empresa activa.');}
 export function saveDraft(invoice:Invoice,revision=0){return access(db=>{validInvoice(invoice);const row=query<any>(db,'SELECT * FROM vf_invoices WHERE id=?',[invoice.id])[0];if(row&&(row.state!=='draft'||row.revision!==revision))throw Error('La factura se ha emitido o ha cambiado en otra pestaña. Vuelve a abrirla.');if(!row&&revision!==0)throw Error('El borrador ya no existe.');
@@ -52,4 +53,4 @@ export function validateVfBackup(db:Database){
  if(!checkChain(records))throw Error('La cadena de registros VERI*FACTU de la copia no es íntegra.');
 }
 export type QrData={id:string;nif:string;number:string;date:string;total:string};
-export function qrUrl(i:Invoice,base:string){const url=new URL(base);url.search='';const p=new URLSearchParams({cotejo:i.id,nif:i.issuer.nif,numero:fullNumber(i),fecha:i.date,total:String((i.taxes.reduce((s,t)=>s+t.gross-t.discount+t.quota,0)).toFixed(2))});url.hash='/servicios/agencia-tributaria/verifactu?'+p;return url.href;}
+export function qrUrl(i:Invoice,base:string,practiceId?:string){const url=new URL(base);url.search='';const p=new URLSearchParams({cotejo:i.id,nif:i.issuer.nif,numero:fullNumber(i),fecha:i.date,total:String((i.taxes.reduce((s,t)=>s+t.gross-t.discount+t.quota,0)).toFixed(2))});if(practiceId)p.set('practica',practiceId);url.hash='/servicios/agencia-tributaria/verifactu?'+p;return url.href;}

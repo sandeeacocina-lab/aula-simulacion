@@ -82,7 +82,7 @@ describe('Rectificativas importadas y conservación del original',()=>{
   const missing=structuredClone(backup);missing.files=[];await expect(restoreBackup(missing)).rejects.toThrow('PDF de origen');
   const tampered=structuredClone(backup),table=tampered.tables.vf_records;table.rows[0][table.columns.indexOf('hash')]='ALTERADA';await expect(restoreBackup(tampered)).rejects.toThrow('cadena');
   expect((await createBackup()).tables).toEqual(backup.tables);
-  const legacy=structuredClone(backup);delete legacy.tables.vf_invoices;delete legacy.tables.vf_records;legacy.files=[];await restoreBackup(legacy);expect(await listRecords()).toHaveLength(0);expect(await listInvoices()).toHaveLength(0);
+  const legacy=structuredClone(backup);delete legacy.tables.vf_invoices;delete legacy.tables.vf_records;delete legacy.tables.vf_registry;legacy.files=[];await restoreBackup(legacy);expect(await listRecords()).toHaveLength(0);expect(await listInvoices()).toHaveLength(0);
  });
  it('codifica el cotejo en la central conservando el número y el total',()=>{
   const i=invoice(),url=new URL(qrUrl(i,'https://simulacion.sandramangas.com/?anterior=1#/servicios?empresa=decasarre'));
