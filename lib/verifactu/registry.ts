@@ -31,7 +31,7 @@ export async function registryUrl():Promise<string|null>{
 export function publicEvent(r:InvoiceRecord):RegistryEvent{return parseRegistryEvent({version:1,id:r.id,invoice:{id:r.invoiceId,nif:r.payload.invoice.issuer.nif,number:fullNumber(r.payload.invoice),date:r.payload.invoice.date,total:totals(r.payload.invoice).total.toFixed(2)},hash:r.hash,previousHash:r.previousHash,kind:r.kind,status:r.status,createdAt:r.createdAt,signed:!!r.payload.signature?.conform});}
 async function request(url:string,options:RequestInit={}){
  let response:Response;
- try{response=await fetch(url,{...options,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.timeout(8000)});}catch{throw Error('No se ha podido contactar con el registro compartido. Conserva la práctica y reintenta el envío cuando tengas conexión.');}
+ try{response=await fetch(url,{...options,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.timeout(30000)});}catch{throw Error('No se ha podido contactar con el registro compartido. Conserva la práctica y reintenta el envío cuando tengas conexión.');}
  let data:any;try{data=await response.json();}catch{throw Error('El registro compartido ha devuelto una respuesta no válida.');}
  if(!response.ok)throw Error(typeof data.error==='string'?data.error:'No se ha podido consultar el registro compartido.');
  return data;
