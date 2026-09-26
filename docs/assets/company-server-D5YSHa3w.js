@@ -1,0 +1,1 @@
+import{st as e}from"./index-ewGt0bh5.js";var t=()=>`demo`,n=e;export{n,t};
