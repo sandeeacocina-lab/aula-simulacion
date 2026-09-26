@@ -1,14 +1,14 @@
 import {newMailId} from '@/lib/mail-types';
 import {companyId,companyProfile} from './company-server';
 import {env} from '@/lib/local/runtime';
-type Scope='sepe'|'social'|'registry'|'bank'|'mail'|'mandate'|'documentation'|'document'|'all';
+type Scope='sepe'|'social'|'registry'|'bank'|'mail'|'mandate'|'documentation'|'document'|'verifactu'|'all';
 class PracticeError extends Error{constructor(message:string,public status=400){super(message);}}
 const json=(d:unknown,status=200)=>Response.json(d,{status,headers:{'Cache-Control':'no-store'}});
 const db=()=>{if(!env.DB)throw new PracticeError('No se puede consultar la central.',503);return env.DB;};
-const scopes:Scope[]=['sepe','social','registry','bank','mail','mandate','documentation','document','all'];
+const scopes:Scope[]=['sepe','social','registry','bank','mail','mandate','documentation','document','verifactu','all'];
 const tableStamp=(table:string,expression='id')=>`(SELECT COALESCE(json_group_array(v),'[]') FROM (SELECT ${expression} AS v FROM ${table} WHERE ${table==='bank_accounts'?`id='${companyId()}'`:`company_id='${companyId()}'`} ORDER BY id))`;
 function stampSQL(scope:Scope){
- const parts:Record<string,string[]>={sepe:[tableStamp('sepe_batches',"id||created_at||fingerprint")],social:[tableStamp('social_batches',"id||created_at||fingerprint")],registry:[tableStamp('social_registry',"id||created_at||fingerprint")],bank:[tableStamp('bank_accounts',"id||created_at||revision"),tableStamp('bank_batches',"id||created_at||fingerprint"),tableStamp('bank_products'),tableStamp('bank_mandates',"id||revision")],mail:[tableStamp('mail_messages',"id||revision")],documentation:[tableStamp('documentation_assignments',"id||revision"),tableStamp('documentation_files',"id||revision")]};
+ const parts:Record<string,string[]>={verifactu:[tableStamp('vf_invoices',"id||revision"),tableStamp('vf_records',"id||hash")],sepe:[tableStamp('sepe_batches',"id||created_at||fingerprint")],social:[tableStamp('social_batches',"id||created_at||fingerprint")],registry:[tableStamp('social_registry',"id||created_at||fingerprint")],bank:[tableStamp('bank_accounts',"id||created_at||revision"),tableStamp('bank_batches',"id||created_at||fingerprint"),tableStamp('bank_products'),tableStamp('bank_mandates',"id||revision")],mail:[tableStamp('mail_messages',"id||revision")],documentation:[tableStamp('documentation_assignments',"id||revision"),tableStamp('documentation_files',"id||revision")]};
  return 'SELECT '+(scope==='all'?Object.values(parts).flat():parts[scope==='mandate'?'bank':scope==='document'?'documentation':scope]).join("||'|'||")+' AS stamp';
 }
 async function sha(s:string){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))),v=>v.toString(16).padStart(2,'0')).join('');}
@@ -18,6 +18,7 @@ async function plan(scope:Scope,id?:string){
  const statements:D1PreparedStatement[]=[],files:string[]=[],counts:Record<string,number>={},notes:string[]=[];
  const has=(s:Scope)=>scope===s||scope==='all';
  const remove=(table:string,ids:string[])=>statements.push(db().prepare(`DELETE FROM ${table} WHERE ${idsWhere()}`).bind(JSON.stringify(ids)));
+ if(has('verifactu')){if(id)throw new PracticeError('Reinicia el módulo completo para conservar la coherencia del historial.');const invoices=await rows('vf_invoices');counts['Facturas y borradores']=invoices.length;counts['Registros VERI*FACTU']=(await rows('vf_records')).length;files.push(...invoices.map(x=>x.source_key).filter(Boolean));statements.push(db().prepare("DELETE FROM vf_records WHERE company_id='demo'"),db().prepare("DELETE FROM vf_invoices WHERE company_id='demo'"));}
  if(has('sepe')){const r=await rows('sepe_batches',id),ids=r.map(x=>x.id);counts['Comunicaciones SEPE']=r.length;files.push(...r.map(x=>x.xml_key).filter(Boolean));statements.push(db().prepare(`DELETE FROM sepe_contracts WHERE company_id='${companyId()}' AND batch_id IN (SELECT value FROM json_each(?))`).bind(JSON.stringify(ids)));remove('sepe_batches',ids);}
  const socialRows=has('social')?await rows('social_batches',id):[];
  if(has('social')){const r=socialRows,ids=r.map(x=>x.id);counts['Presentaciones de cotización']=r.length;const docs=await db().prepare(`SELECT pdf_key FROM social_documents WHERE company_id='${companyId()}' AND batch_id IN (SELECT value FROM json_each(?))`).bind(JSON.stringify(ids)).all<{pdf_key:string}>();files.push(...docs.results.map(x=>x.pdf_key));statements.push(db().prepare(`DELETE FROM social_documents WHERE company_id='${companyId()}' AND batch_id IN (SELECT value FROM json_each(?))`).bind(JSON.stringify(ids)));remove('social_batches',ids);}

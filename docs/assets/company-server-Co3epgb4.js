@@ -1,0 +1,1 @@
+import{st as e}from"./index-Dj30AZw8.js";var t=()=>`demo`,n=e;export{n,t};
