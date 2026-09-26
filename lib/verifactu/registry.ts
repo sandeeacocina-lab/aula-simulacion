@@ -20,7 +20,9 @@ function state(db:Database):RegistryState{const row=identity(db),records=records
 export function registryState(id=selectedWorkspaceId()){return exclusive(async()=>{const db=await readDatabase(id);try{return state(db);}finally{db.close();}},id);}
 export async function registryUrl():Promise<string|null>{
  const base=typeof document==='undefined'?'https://simulacion.sandramangas.com/':document.baseURI;
- const response=await fetch(new URL('./verifactu-registry.json',base),{cache:'no-store',signal:AbortSignal.timeout(8000),credentials:'omit',referrerPolicy:'no-referrer'});
+ let response:Response;
+ try{response=await fetch(new URL('./verifactu-registry.json',base),{cache:'no-store',signal:AbortSignal.timeout(30000),credentials:'omit',referrerPolicy:'no-referrer'});}
+ catch{throw Error('No se ha podido cargar la conexión con el registro compartido. Reintenta la consulta cuando tengas conexión.');}
  if(!response.ok)throw Error('No se ha podido consultar la configuración del registro compartido.');
  const config=await response.json();if(config.version!==1||typeof config.url!=='string')throw Error('Configuración del registro compartido no válida.');
  if(!config.url)return null;
