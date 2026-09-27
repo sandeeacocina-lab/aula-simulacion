@@ -29,7 +29,7 @@ export default function Home(){
  function enter(id:string){try{selectWorkspace(id);window.location.hash=companyUrl('/');window.location.reload();}catch(e){setError((e as Error).message);}}
  function create(e:FormEvent){e.preventDefault();try{const workspace=createWorkspace({...profile,legalName:profile.name,domain:profile.mailbox.split('@')[1]});enter(workspace.id);}catch(e){setError((e as Error).message);}}
  return <div className="aula workspace-picker"><AulaHeader selector/><main id="contenido" className="aula-main">
-  <section className="workspace-welcome"><p className="aula-eyebrow">APRENDER HACIENDO</p><h1>Tu empresa.<br/>Tu próxima experiencia.</h1><p>Elige una empresa y entra en su central de servicios.<br/>También puedes crear la tuya para un nuevo proyecto.</p></section>
+  <section className="workspace-welcome"><p className="aula-eyebrow">APRENDER HACIENDO</p><h1>Una empresa simulada.<br/>Un aprendizaje real.</h1><p>Pon en práctica tus conocimientos, toma decisiones y resuelve situaciones de trabajo en un entorno cercano a la realidad profesional.</p></section>
   <div className="aula-section-title"><h2>¿Con qué empresa trabajamos?</h2><span>Un espacio propio para cada práctica</span></div>
   {error&&!open&&<p className="aula-error" role="alert">{error}</p>}
   <section className="workspace-grid" aria-label="Empresas disponibles">
